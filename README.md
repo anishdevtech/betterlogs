@@ -1,10 +1,10 @@
 
-# betterlogs 🚀
+# @anish2dev/betterlogs 🚀
 
 A lightweight yet powerful logging library that makes console output elegant, expressive, and customizable for both Node.js and browsers.
 
-![npm](https://img.shields.io/npm/v/betterlogs)
-![npm](https://img.shields.io/npm/dt/betterlogs)
+![npm](https://img.shields.io/npm/v/@anishsharma/betterlogs)
+![npm](https://img.shields.io/npm/dt/@/anishsharma/betterlogs)
 ![GitHub](https://img.shields.io/github/license/anishdevtech/betterlogs)
 ![Tests](https://github.com/anishdevtech/betterlogs/actions/workflows/test.yml/badge.svg)
 
@@ -24,13 +24,13 @@ A lightweight yet powerful logging library that makes console output elegant, ex
 ## 📦 Installation
 
 ```bash
-npm install betterlogs
+npm install @anishsharma/betterlogs
 ```
 
 🚀 Quick Start
 
 ```typescript
-import log from 'betterlogs';
+import log from '@anishsharma/betterlogs';
 
 // Basic logging
 log.info('Server starting...');
@@ -104,7 +104,7 @@ Advanced Features
 
 ```html
 <script type="module">
-  import log from 'https://esm.sh/betterlogs';
+  import log from 'https://esm.sh/@anishsharma/betterlogs';
   
   log.info('Browser logging activated!');
   log.success('Betterlogs works in browsers!');
