@@ -86,4 +86,45 @@ it('should support custom themes', () => {
         expect(parsed).toHaveProperty("message", "JSON formatted message");
         expect(parsed).toHaveProperty("timestamp");
     });
+    
+});
+describe('Integration Tests - Extended', () => {
+  it('should handle file logging in Node.js', () => {
+    if (betterlogs.label('FileTest').isNode) {
+      betterlogs.file('test.log');
+      betterlogs.info('File log test');
+      // File logging should not throw errors
+      expect(() => betterlogs.info('File test')).not.toThrow();
+    }
+  });
+
+  it('should handle all configuration options', () => {
+    betterlogs.config({
+      showTimestamp: false,
+      showEmoji: false,
+      theme: 'minimal',
+      level: 'debug',
+      mode: 'pretty',
+      timestampFormat: '12h'
+    });
+
+    betterlogs.debug('Debug with minimal theme');
+    betterlogs.info('Info with minimal theme');
+    
+    // Should not throw with various configs
+    expect(() => {
+      betterlogs.config({ theme: 'dark' });
+      betterlogs.config({ theme: 'light' });
+      betterlogs.config({ theme: 'neon' });
+    }).not.toThrow();
+  });
+
+  it('should handle table logging', () => {
+    const testData = [
+      { name: 'John', age: 30 },
+      { name: 'Jane', age: 25 }
+    ];
+    
+    expect(() => betterlogs.table(testData)).not.toThrow();
+  });
 });

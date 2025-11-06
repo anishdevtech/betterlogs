@@ -50,3 +50,26 @@ describe('Level Weights', () => {
     expect(levelWeights.silent).toBe(999);
   });
 });
+describe('Colorizer - Extended', () => {
+  it('should handle unknown colors in Node.js', () => {
+    const result = Colorizer.applyColor('test', 'unknownColor');
+    expect(result).toBe('test'); // Should return original text for unknown colors
+  });
+
+  it('should handle background colors', () => {
+    const result = Colorizer.applyColor('test', 'red', true);
+    expect(result).toContain('test');
+  });
+});
+
+describe('EnvironmentDetector - Extended', () => {
+  it('should handle NO_EMOJI environment variable', () => {
+    const originalEnv = process.env.NO_EMOJI;
+    process.env.NO_EMOJI = 'true';
+    
+    expect(EnvironmentDetector.supportsEmoji()).toBe(false);
+    
+    // Restore
+    process.env.NO_EMOJI = originalEnv;
+  });
+});
