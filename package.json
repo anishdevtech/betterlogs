@@ -1,0 +1,63 @@
+{
+    "name": "betterlogs",
+    "version": "1.0.0",
+    "description": "A lightweight yet powerful logging library that makes console output elegant, expressive, and customizable",
+    "main": "./dist/index.js",
+    "module": "./dist/index.mjs",
+    "types": "./dist/index.d.ts",
+    "exports": {
+        ".": {
+            "types": "./dist/index.d.ts",
+            "import": "./dist/index.mjs",
+            "require": "./dist/index.js"
+        }
+    },
+    "scripts": {
+        "build": "tsup src/index.ts --format cjs,esm --dts --clean",
+        "dev": "tsup src/index.ts --format cjs,esm --dts --watch",
+        "test": "vitest run",
+        "test:watch": "vitest",
+        "test:coverage": "vitest run --coverage",
+        "test:ui": "vitest --ui",
+        "lint": "eslint src --ext .ts",
+        "prepublishOnly": "npm run build && npm test"
+    },
+    "keywords": [
+        "logging",
+        "console",
+        "logger",
+        "browser",
+        "node",
+        "typescript",
+        "pretty-logs",
+        "colored-logs",
+        "themes",
+        "emoji-logs"
+    ],
+    "author": "Anish Sharma <anishdev02@gmail.com> (https://github.com/anishdevtech)",
+    "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/anishdevtech/betterlogs.git"
+    },
+    "homepage": "https://github.com/anishdevtech/betterlogs#readme",
+    "bugs": {
+        "url": "https://github.com/anishdevtech/betterlogs/issues"
+    },
+    "engines": {
+        "node": ">=14.0.0"
+    },
+    "devDependencies": {
+        "@types/node": "^20.0.0",
+        "tsup": "^8.0.0",
+        "typescript": "^5.0.0",
+        "vitest": "^1.0.0",
+        "@vitest/ui": "^1.0.0",
+        "@vitest/coverage-v8": "^1.0.0",
+        "jsdom": "^23.0.0",
+        "@typescript-eslint/eslint-plugin": "^6.0.0",
+        "@typescript-eslint/parser": "^6.0.0",
+        "eslint": "^8.0.0",
+        "prettier": "^3.0.0"
+    }
+}

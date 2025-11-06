@@ -1,0 +1,76 @@
+# Source files (we only publish built files)
+src/
+!src/index.ts
+
+# Tests
+tests/
+test/
+__tests__/
+*.test.ts
+*.spec.ts
+
+# Configuration files
+tsconfig.json
+vitest.config.ts
+.eslintrc.json
+.prettierrc
+.editorconfig
+.gitattributes
+
+# GitHub and CI files
+.github/
+.codecov.yml
+
+# Documentation (optional - include if you want to exclude from npm package)
+docs/
+examples/
+
+# Build tools and scripts
+scripts/
+rollup.config.js
+webpack.config.js
+
+# Coverage
+coverage/
+*.lcov
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs
+logs
+*.log
+
+# Environment files
+.env
+.env.*
+.env.local
+
+# Lock files (we want npm to use the published package, not build from source)
+package-lock.json
+yarn.lock
+
+# Git
+.git/
+.gitignore
+
+# Markdown files (optional - include if you don't want them in npm package)
+*.md
+!README.md
+
+# Images and assets (optional)
+images/
+assets/
