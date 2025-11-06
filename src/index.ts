@@ -27,11 +27,12 @@ const betterlogs = {
     
     // Advanced features
     addLevel: (name: string, config: { color: string; emoji: string }) => {
-        baseLogger.addLevel(name, config);
-        (betterlogs as any)[name] = (message: string, ...data: any[]) => {
-            (baseLogger as any)[name](message, ...data);
-        };
-    },
+    baseLogger.addLevel(name, config);
+    // Use proper typing instead of 'any'
+    (betterlogs as Record<string, (message: string, ...data: unknown[]) => void>)[name] = (message: string, ...data: unknown[]) => {
+        (baseLogger as Record<string, (message: string, ...data: unknown[]) => void>)[name](message, ...data);
+    };
+},
     group: baseLogger.group.bind(baseLogger),
     table: baseLogger.table.bind(baseLogger),
     time: baseLogger.time.bind(baseLogger),

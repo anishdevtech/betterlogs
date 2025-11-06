@@ -1,5 +1,5 @@
 import { LogEntry, BetterLogsConfig } from "./types";
-import { Colorizer, formatTime, EnvironmentDetector } from "./utils";
+import { Colorizer, formatTime } from "./utils";
 import { Theme } from "./types";
 export class Formatter {
    static formatPretty(entry: LogEntry, config: BetterLogsConfig, theme: Theme): string {

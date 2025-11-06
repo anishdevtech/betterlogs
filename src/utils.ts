@@ -1,32 +1,34 @@
 import { BetterLogsConfig, LogLevel } from "./types";
 
 export class EnvironmentDetector {
-  static isNode(): boolean {
-    return typeof process !== 'undefined' && 
-           process.versions != null && 
-           process.versions.node != null;
-  }
-
-  static isBrowser(): boolean {
-    return typeof window !== 'undefined' && typeof document !== 'undefined';
-  }
-
-  static supportsEmoji(): boolean {
-    if (this.isNode()) {
-      // Check if we're in a TTY terminal that supports emoji
-      const isTTY = process.stdout?.isTTY;
-      const hasNoEmojiFlag = process.env.NO_EMOJI === 'true';
-      return !!isTTY && !hasNoEmojiFlag;
+    static isNode(): boolean {
+        return (
+            typeof process !== "undefined" &&
+            process.versions != null &&
+            process.versions.node != null
+        );
     }
-    
-    if (this.isBrowser()) {
-      // Most modern browsers support emoji
-      return true;
+
+    static isBrowser(): boolean {
+        return typeof window !== "undefined" && typeof document !== "undefined";
     }
-    
-    // Default to true for other environments
-    return true;
-  }
+
+    static supportsEmoji(): boolean {
+        if (this.isNode()) {
+            // Check if we're in a TTY terminal that supports emoji
+            const isTTY = process.stdout?.isTTY;
+            const hasNoEmojiFlag = process.env.NO_EMOJI === "true";
+            return !!isTTY && !hasNoEmojiFlag;
+        }
+
+        if (this.isBrowser()) {
+            // Most modern browsers support emoji
+            return true;
+        }
+
+        // Default to true for other environments
+        return true;
+    }
 }
 
 export class Colorizer {
@@ -77,13 +79,13 @@ export class Colorizer {
     }
 
     private static applyBrowserColor(
-        text: string,
+        text: string/*,
         color: string,
-        isBackground: boolean
+        isBackground: boolean*/
     ): string {
         // In browser, we return the text as-is since we can't modify console colors directly
         // Applications can choose to implement CSS styling in their own console wrappers
-        return text;
+        return `${text}`;
     }
 }
 
