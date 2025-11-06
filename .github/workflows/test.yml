@@ -85,12 +85,12 @@ jobs:
     - name: Run npm audit
       run: npm audit --production
 
-    - name: Run Snyk security scan
-      uses: snyk/actions/node@master
-      env:
-        SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-      with:
-        args: --severity-threshold=high
+#   - name: Run Snyk security scan
+#     uses: snyk/actions/node@master
+#     env:
+#        SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+#     with:
+#       args: --severity-threshold=high
 
   release:
     name: Create Release

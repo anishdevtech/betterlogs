@@ -80,12 +80,12 @@ export class Colorizer {
 
     private static applyBrowserColor(
         text: string/*,
-        color: string,
-        isBackground: boolean*/
+        _color: string, // Use underscore to indicate intentionally unused
+        _isBackground: boolean // Use underscore to indicate intentionally unused*/
     ): string {
         // In browser, we return the text as-is since we can't modify console colors directly
         // Applications can choose to implement CSS styling in their own console wrappers
-        return `${text}`;
+        return text;
     }
 }
 
