@@ -1,50 +1,15 @@
 import { BetterLogger } from './logger';
 import { ConfigManager } from './config';
 import { ThemeManager } from './themes';
-import { BetterLogsConfig, Theme } from './types';
+import { BetterLogsConfig, Theme, LogLevel } from './types';
 
 // Create singleton instances
 const themeManager = new ThemeManager();
 const configManager = new ConfigManager(themeManager);
 const baseLogger = new BetterLogger(configManager, themeManager);
 
-// Define the betterlogs interface
-interface BetterLogsInstance {
-  // Core logging methods
-  info: (message: string, ...data: unknown[]) => void;
-  success: (message: string, ...data: unknown[]) => void;
-  warn: (message: string, ...data: unknown[]) => void;
-  error: (message: string, ...data: unknown[]) => void;
-  debug: (message: string, ...data: unknown[]) => void;
-  
-  // Label system
-  label: (labelName: string) => BetterLogger;
-  
-  // Configuration
-  config: (newConfig: Partial<BetterLogsConfig>) => void;
-  setLevel: (level: string) => void;
-  setMode: (mode: 'pretty' | 'json') => void;
-  
-  // Advanced features
-  addLevel: (name: string, config: { color: string; emoji: string }) => void;
-  group: (name: string) => BetterLogger;
-  table: (data: unknown[] | object) => void;
-  time: (label: string) => void;
-  timeEnd: (label: string) => void;
-  file: (filePath: string) => void;
-  
-  // Theme management
-  addTheme: (theme: Theme) => void;
-  
-  // Create new instance
-  create: (config?: Partial<BetterLogsConfig>) => BetterLogger;
-  
-  // Allow custom levels with index signature
-  [key: string]: ((message: string, ...data: unknown[]) => void) | unknown;
-}
-
-// Create the betterlogs object with ALL methods
-const betterlogs: BetterLogsInstance = {
+// Create the betterlogs object
+const betterlogs = {
   // Core logging methods
   info: baseLogger.info.bind(baseLogger),
   success: baseLogger.success.bind(baseLogger),
@@ -57,16 +22,17 @@ const betterlogs: BetterLogsInstance = {
   
   // Configuration
   config: baseLogger.config.bind(baseLogger),
-  setLevel: baseLogger.setLevel.bind(baseLogger),
+  setLevel: (level: string) => baseLogger.setLevel(level as LogLevel),
   setMode: baseLogger.setMode.bind(baseLogger),
   
   // Advanced features
   addLevel: (name: string, config: { color: string; emoji: string }) => {
     baseLogger.addLevel(name, config);
-    // Add the custom level method to betterlogs object
-    betterlogs[name] = (message: string, ...data: unknown[]) => {
-      const customLogger = baseLogger as Record<string, (message: string, ...data: unknown[]) => void>;
-      customLogger[name](message, ...data);
+    // Add custom level method using simpler approach
+    (betterlogs as any)[name] = (message: string, ...data: unknown[]) => {
+      // Use type assertion to avoid complex type issues
+      const loggerWithCustomMethod = baseLogger as any;
+      loggerWithCustomMethod[name](message, ...data);
     };
   },
   group: baseLogger.group.bind(baseLogger),

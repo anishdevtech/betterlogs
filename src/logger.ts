@@ -5,17 +5,15 @@ import { Formatter } from "./formatter";
 import { FileLogger } from "./fileLogger";
 import { EnvironmentDetector } from "./utils";
 
-// Define interface for custom level methods
-interface CustomLevelMethods {
-    [key: string]: (message: string, ...data: unknown[]) => void;
-}
+
 
 export class BetterLogger {
     private configManager: ConfigManager;
     private themeManager: ThemeManager;
     private fileLogger?: FileLogger;
     private labels: Map<string, BetterLogger> = new Map();
-    private customLevels: Map<string, { color: string; emoji: string }> = new Map();
+    private customLevels: Map<string, { color: string; emoji: string }> =
+        new Map();
     private activeTimers: Map<string, number> = new Map();
     private label?: string;
 
@@ -64,7 +62,11 @@ export class BetterLogger {
         if (!this.labels.has(labelName)) {
             this.labels.set(
                 labelName,
-                new BetterLogger(this.configManager, this.themeManager, labelName)
+                new BetterLogger(
+                    this.configManager,
+                    this.themeManager,
+                    labelName
+                )
             );
         }
         return this.labels.get(labelName)!;
@@ -86,15 +88,14 @@ export class BetterLogger {
     // Custom levels
     addLevel(name: string, config: { color: string; emoji: string }): void {
         this.customLevels.set(name, config);
-        
+
         // Add the level to the current theme for proper formatting
         const currentTheme = this.configManager.getCurrentTheme();
         if (!currentTheme.levels[name]) {
             currentTheme.levels[name] = config;
         }
 
-        // Add method to instance with proper typing
-        (this as BetterLogger & CustomLevelMethods)[name] = (message: string, ...data: unknown[]) => {
+        (this as any)[name] = (message: string, ...data: unknown[]) => {
             this.log(name, message, data);
         };
     }
@@ -141,8 +142,8 @@ export class BetterLogger {
     // Private methods
     private log(level: string, message: string, data: unknown[]): void {
         // For custom levels, check against 'debug' level to ensure they're logged
-        const levelToCheck = this.customLevels.has(level) ? 'debug' : level;
-        
+        const levelToCheck = this.customLevels.has(level) ? "debug" : level;
+
         if (!this.configManager.shouldLog(levelToCheck as LogLevel)) {
             return;
         }
