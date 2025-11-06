@@ -20,7 +20,8 @@
         "test:coverage": "vitest run --coverage",
         "test:ui": "vitest --ui",
         "lint": "eslint src --ext .ts",
-        "prepublishOnly": "npm run build && npm test"
+        "lint:fix": "eslint src --ext .ts --fix",
+        "prepublishOnly": "npm run build && npm test && npm run lint"
     },
     "keywords": [
         "logging",
@@ -45,19 +46,19 @@
         "url": "https://github.com/anishdevtech/betterlogs/issues"
     },
     "engines": {
-        "node": ">=14.0.0"
+        "node": ">=16.0.0"
     },
     "devDependencies": {
         "@types/node": "^20.0.0",
         "tsup": "^8.0.0",
         "typescript": "^5.0.0",
-        "vitest": "^1.0.0",
-        "@vitest/ui": "^1.0.0",
-        "@vitest/coverage-v8": "^1.0.0",
+        "vitest": "^1.6.1",
+        "@vitest/ui": "^1.6.1",
+        "@vitest/coverage-v8": "^1.6.1",
         "jsdom": "^23.0.0",
-        "@typescript-eslint/eslint-plugin": "^6.0.0",
-        "@typescript-eslint/parser": "^6.0.0",
-        "eslint": "^8.0.0",
+        "@typescript-eslint/eslint-plugin": "^7.0.0",
+        "@typescript-eslint/parser": "^7.0.0",
+        "eslint": "^8.57.1",
         "prettier": "^3.0.0"
     }
 }
