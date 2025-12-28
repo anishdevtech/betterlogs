@@ -13,23 +13,23 @@ export const defaultConfig: BetterLogsConfig = {
 export class ConfigManager {
   private config: BetterLogsConfig;
   private themeManager: ThemeManager;
-  
+
   constructor(themeManager: ThemeManager) {
     this.themeManager = themeManager;
     this.config = { ...defaultConfig };
   }
-  
+
   updateConfig(newConfig: Partial<BetterLogsConfig>): void {
     this.config = {
       ...this.config,
       ...newConfig
     };
   }
-  
+
   getConfig(): BetterLogsConfig {
     return { ...this.config };
   }
-  
+
   getCurrentTheme() {
     const theme = this.config.theme;
     if (typeof theme === 'string') {
@@ -37,7 +37,7 @@ export class ConfigManager {
     }
     return theme;
   }
-  
+
   shouldLog(level: LogLevel): boolean {
     const levelWeights = {
       debug: 0,
@@ -47,7 +47,7 @@ export class ConfigManager {
       error: 3,
       silent: 999
     };
-    
+
     return levelWeights[level] >= levelWeights[this.config.level];
   }
 }

@@ -369,7 +369,6 @@ Found a bug or have a feature request? We'd love to hear from you!
 - 🐛 [Report Issues](https://github.com/anishdevtech/betterlogs/issues)
 - 💡 [Request Features](https://github.com/anishdevtech/betterlogs/issues)
 
-
 ---
 
 ## 📄 License

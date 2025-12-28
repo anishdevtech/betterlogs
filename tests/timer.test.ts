@@ -4,47 +4,41 @@ import { ConfigManager } from '../src/config';
 import { ThemeManager } from '../src/themes';
 
 describe('Timer Utilities', () => {
-    let logger: BetterLogger;
+  let logger: BetterLogger;
 
-    beforeEach(() => {
-        // Spy on console.log so we can check if it was called
-        vi.spyOn(console, 'log').mockImplementation(() => {}); 
-        
-        const themeManager = new ThemeManager();
-        const configManager = new ConfigManager(themeManager);
-        logger = new BetterLogger(configManager, themeManager);
-        vi.useFakeTimers();
-    });
+  beforeEach(() => {
+    // Spy on console.log so we can check if it was called
+    vi.spyOn(console, 'log').mockImplementation(() => {});
 
-    afterEach(() => {
-        vi.restoreAllMocks(); // Clean up spies
-        vi.useRealTimers();
-    });
+    const themeManager = new ThemeManager();
+    const configManager = new ConfigManager(themeManager);
+    logger = new BetterLogger(configManager, themeManager);
+    vi.useFakeTimers();
+  });
 
-    it('should measure time correctly', () => {
-        logger.time('test-timer');
-        vi.advanceTimersByTime(1000);
-        logger.timeEnd('test-timer');
+  afterEach(() => {
+    vi.restoreAllMocks(); // Clean up spies
+    vi.useRealTimers();
+  });
 
-        expect(console.log).toHaveBeenCalledWith(
-            expect.stringContaining("Timer 'test-timer': 1000ms")
-        );
-    });
+  it('should measure time correctly', () => {
+    logger.time('test-timer');
+    vi.advanceTimersByTime(1000);
+    logger.timeEnd('test-timer');
 
-    it('should handle multiple timers', () => {
-        logger.time('timer1');
-        vi.advanceTimersByTime(500);
-        logger.time('timer2');
-        vi.advanceTimersByTime(300);
-        
-        logger.timeEnd('timer2');
-        expect(console.log).toHaveBeenCalledWith(
-            expect.stringContaining("Timer 'timer2': 300ms")
-        );
+    expect(console.log).toHaveBeenCalledWith(expect.stringContaining("Timer 'test-timer': 1000ms"));
+  });
 
-        logger.timeEnd('timer1');
-        expect(console.log).toHaveBeenCalledWith(
-            expect.stringContaining("Timer 'timer1': 800ms")
-        );
-    });
+  it('should handle multiple timers', () => {
+    logger.time('timer1');
+    vi.advanceTimersByTime(500);
+    logger.time('timer2');
+    vi.advanceTimersByTime(300);
+
+    logger.timeEnd('timer2');
+    expect(console.log).toHaveBeenCalledWith(expect.stringContaining("Timer 'timer2': 300ms"));
+
+    logger.timeEnd('timer1');
+    expect(console.log).toHaveBeenCalledWith(expect.stringContaining("Timer 'timer1': 800ms"));
+  });
 });

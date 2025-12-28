@@ -14,14 +14,14 @@ const betterlogs = {
   warn: baseLogger.warn.bind(baseLogger),
   error: baseLogger.error.bind(baseLogger),
   debug: baseLogger.debug.bind(baseLogger),
-  
+
   label: baseLogger.withLabel.bind(baseLogger),
   with: baseLogger.with.bind(baseLogger),
-  
+
   config: baseLogger.config.bind(baseLogger),
   setLevel: (level: string) => baseLogger.setLevel(level as LogLevel),
   setMode: baseLogger.setMode.bind(baseLogger),
-  
+
   addLevel: (name: string, config: { color: string; emoji: string }) => {
     baseLogger.addLevel(name, config);
     (betterlogs as any)[name] = (message: string, ...data: unknown[]) => {
@@ -29,17 +29,17 @@ const betterlogs = {
       loggerWithCustomMethod[name](message, ...data);
     };
   },
-  
+
   group: baseLogger.group.bind(baseLogger),
   table: baseLogger.table.bind(baseLogger),
   time: baseLogger.time.bind(baseLogger),
   timeEnd: baseLogger.timeEnd.bind(baseLogger),
   file: baseLogger.file.bind(baseLogger),
-  
+
   addTransport: baseLogger.addTransport.bind(baseLogger), // <--- Added missing method
-  
+
   addTheme: (theme: Theme) => themeManager.registerTheme(theme),
-  
+
   create: (config?: Partial<BetterLogsConfig>) => {
     const newConfigManager = new ConfigManager(themeManager);
     if (config) {

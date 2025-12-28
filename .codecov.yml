@@ -9,13 +9,13 @@ coverage:
         target: 80%
 
 comment:
-  layout: "reach,diff,flags,tree"
+  layout: 'reach,diff,flags,tree'
   behavior: default
   require_changes: false
 
 ignore:
-  - "**/*.d.ts"
-  - "**/*.test.ts"
-  - "**/*.spec.ts"
-  - "dist/"
-  - "node_modules/"
+  - '**/*.d.ts'
+  - '**/*.test.ts'
+  - '**/*.spec.ts'
+  - 'dist/'
+  - 'node_modules/'
