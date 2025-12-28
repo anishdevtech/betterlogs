@@ -1,6 +1,6 @@
 {
   "name": "@anishsharma/betterlogs",
-  "version": "1.0.0",
+  "version": "1.0.5",
   "description": "A lightweight yet powerful logging library that makes console output elegant, expressive, and customizable",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
