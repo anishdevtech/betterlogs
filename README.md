@@ -11,8 +11,7 @@ A lightweight yet powerful logging library that makes console output elegant, ex
 [![License](https://img.shields.io/github/license/anishdevtech/betterlogs?style=flat-square&color=green)](https://github.com/anishdevtech/betterlogs/blob/main/LICENSE)
 
 [![Tests](https://img.shields.io/github/actions/workflow/status/anishdevtech/betterlogs/test.yml?style=flat-square&logo=github-actions&label=tests)](https://github.com/anishdevtech/betterlogs/actions/workflows/test.yml)
-[![Build](https://img.shields.io/github/actions/workflow/status/anishdevtech/betterlogs/build.yml?style=flat-square&logo=github-actions&label=build)](https://github.com/anishdevtech/betterlogs/actions)
-[![Coverage](https://img.shields.io/codecov/c/github/anishdevtech/betterlogs?style=flat-square&logo=codecov)](https://codecov.io/gh/anishdevtech/betterlogs)
+[![Minimal Tests](https://github.com/anishdevtech/betterlogs/actions/workflows/test.yml/badge.svg)](https://github.com/anishdevtech/betterlogs/actions/workflows/test.yml)[![Coverage](https://img.shields.io/codecov/c/github/anishdevtech/betterlogs?style=flat-square&logo=codecov)](https://codecov.io/gh/anishdevtech/betterlogs)
 [![TypeScript](https://img.shields.io/badge/TypeScript-Ready-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Node.js](https://img.shields.io/badge/Node.js-%3E%3D14-339933?style=flat-square&logo=node.js&logoColor=white)](https://nodejs.org/)
 
