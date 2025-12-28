@@ -13,20 +13,16 @@
             "require": "./dist/index.js"
         }
     },
-    "scripts": {
-        "build": "tsup src/index.ts --format cjs,esm --dts --clean",
-        "dev": "tsup src/index.ts --format cjs,esm --dts --watch",
-        "test": "vitest run",
-        "test:watch": "vitest",
-        "test:coverage": "vitest run --coverage",
-        "test:ui": "vitest --ui",
-        
-    "test:coverage:detailed": "vitest run --coverage --reporter=verbose",
-    "test:coverage:html": "vitest run --coverage && open coverage/index.html",
-        "lint": "eslint src --ext .ts",
-        "lint:fix": "eslint src --ext .ts --fix",
-        "prepublishOnly": "npm run build && npm test && npm run lint"
-    },
+  "scripts": {
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "build": "tsup",
+    "lint": "eslint 'src/**/*.ts'",
+    "lint:fix": "eslint 'src/**/*.ts' --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "typecheck": "tsc --noEmit"
+  },
     "keywords": [
         "logging",
         "console",

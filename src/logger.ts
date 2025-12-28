@@ -1,78 +1,70 @@
-import { LogEntry, LogLevel, BetterLogsConfig } from "./types";
+import { LogEntry, LogLevel, BetterLogsConfig, LogTransport, LogOptions } from "./types";
 import { ConfigManager } from "./config";
 import { ThemeManager } from "./themes";
 import { Formatter } from "./formatter";
 import { FileLogger } from "./fileLogger";
 import { EnvironmentDetector } from "./utils";
 
-
-
 export class BetterLogger {
     private configManager: ConfigManager;
     private themeManager: ThemeManager;
     private fileLogger?: FileLogger;
     private labels: Map<string, BetterLogger> = new Map();
-    private customLevels: Map<string, { color: string; emoji: string }> =
-        new Map();
+    private customLevels: Map<string, { color: string; emoji: string }> = new Map();
     private activeTimers: Map<string, number> = new Map();
+    private transports: LogTransport[] = [];
     private label?: string;
+    private tempMeta?: LogOptions;
 
     constructor(
         configManager: ConfigManager,
         themeManager: ThemeManager,
-        label?: string
+        label?: string,
+        meta?: LogOptions
     ) {
         this.configManager = configManager;
         this.themeManager = themeManager;
         this.label = label;
+        this.tempMeta = meta;
 
-        if (
-            EnvironmentDetector.isNode() &&
-            this.configManager.getConfig().file
-        ) {
-            this.fileLogger = new FileLogger(
-                this.configManager.getConfig().file!
-            );
+        if (EnvironmentDetector.isNode() && this.configManager.getConfig().file) {
+            this.fileLogger = new FileLogger(this.configManager.getConfig().file!);
         }
     }
 
-    // Core logging methods
-    info(message: string, ...data: unknown[]): void {
-        this.log("info", message, data);
+    addTransport(transport: LogTransport): void {
+        this.transports.push(transport);
     }
 
-    success(message: string, ...data: unknown[]): void {
-        this.log("success", message, data);
+    with(options: LogOptions): BetterLogger {
+        const logger = new BetterLogger(this.configManager, this.themeManager, this.label, options);
+        logger.transports = this.transports;
+        logger.fileLogger = this.fileLogger;
+        logger.customLevels = this.customLevels;
+        return logger;
     }
 
-    warn(message: string, ...data: unknown[]): void {
-        this.log("warn", message, data);
-    }
+    info(message: string, ...data: unknown[]): void { this.log("info", message, data); }
+    success(message: string, ...data: unknown[]): void { this.log("success", message, data); }
+    warn(message: string, ...data: unknown[]): void { this.log("warn", message, data); }
+    error(message: string, ...data: unknown[]): void { this.log("error", message, data); }
+    debug(message: string, ...data: unknown[]): void { this.log("debug", message, data); }
 
-    error(message: string, ...data: unknown[]): void {
-        this.log("error", message, data);
-    }
-
-    debug(message: string, ...data: unknown[]): void {
-        this.log("debug", message, data);
-    }
-
-    // Label system
     withLabel(labelName: string): BetterLogger {
         if (!this.labels.has(labelName)) {
-            this.labels.set(
-                labelName,
-                new BetterLogger(
-                    this.configManager,
-                    this.themeManager,
-                    labelName
-                )
+            const logger = new BetterLogger(
+                this.configManager,
+                this.themeManager,
+                labelName
             );
+            logger.transports = this.transports;
+            logger.fileLogger = this.fileLogger;
+            logger.customLevels = this.customLevels;
+            this.labels.set(labelName, logger);
         }
         return this.labels.get(labelName)!;
     }
 
-    // Configuration
     config(newConfig: Partial<BetterLogsConfig>): void {
         this.configManager.updateConfig(newConfig);
     }
@@ -85,11 +77,9 @@ export class BetterLogger {
         this.configManager.updateConfig({ mode });
     }
 
-    // Custom levels
     addLevel(name: string, config: { color: string; emoji: string }): void {
         this.customLevels.set(name, config);
 
-        // Add the level to the current theme for proper formatting
         const currentTheme = this.configManager.getCurrentTheme();
         if (!currentTheme.levels[name]) {
             currentTheme.levels[name] = config;
@@ -100,22 +90,18 @@ export class BetterLogger {
         };
     }
 
-    // Grouped logs
     group(name: string): BetterLogger {
         return this.withLabel(name);
     }
 
-    // Table logging
     table(data: unknown[] | object): void {
         if (console.table) {
             console.table(data);
         } else {
-            // Fallback for environments without console.table
             console.log(JSON.stringify(data, null, 2));
         }
     }
 
-    // Timer utilities
     time(label: string): void {
         this.activeTimers.set(label, Date.now());
     }
@@ -129,19 +115,16 @@ export class BetterLogger {
         }
     }
 
-    // File logging (Node.js only)
     file(filePath: string): void {
         if (EnvironmentDetector.isNode()) {
             this.configManager.updateConfig({ file: filePath });
             this.fileLogger = new FileLogger(filePath);
         } else {
-            this.warn("File logging is only available in Node.js environment");
+            console.warn("File logging is only available in Node.js environment");
         }
     }
 
-    // Private methods
     private log(level: string, message: string, data: unknown[]): void {
-        // For custom levels, check against 'debug' level to ensure they're logged
         const levelToCheck = this.customLevels.has(level) ? "debug" : level;
 
         if (!this.configManager.shouldLog(levelToCheck as LogLevel)) {
@@ -153,26 +136,28 @@ export class BetterLogger {
             message,
             timestamp: new Date(),
             label: this.label,
-            data: data.length > 0 ? data : undefined
+            data: data.length > 0 ? data : undefined,
+            meta: this.tempMeta
         };
 
         const config = this.configManager.getConfig();
         const theme = this.configManager.getCurrentTheme();
 
-        // Ensure custom levels are available in the theme for formatting
         if (!theme.levels[level] && this.customLevels.has(level)) {
             theme.levels[level] = this.customLevels.get(level)!;
         }
 
         const formattedMessage = Formatter.format(entry, config, theme);
 
-        // Output to console
         this.outputToConsole(level, formattedMessage, data);
 
-        // Output to file if configured
         if (this.fileLogger) {
             this.fileLogger.write(entry);
         }
+
+        this.transports.forEach(transport => {
+            transport.log(entry)?.catch(err => console.error("Transport error:", err));
+        });
     }
 
     private outputToConsole(
@@ -191,14 +176,10 @@ export class BetterLogger {
 
     private getConsoleMethod(level: string): (...args: unknown[]) => void {
         switch (level) {
-            case "error":
-                return console.error;
-            case "warn":
-                return console.warn;
-            case "debug":
-                return console.debug;
-            default:
-                return console.log;
+            case "error": return console.error;
+            case "warn": return console.warn;
+            case "debug": return console.debug;
+            default: return console.log;
         }
     }
 }

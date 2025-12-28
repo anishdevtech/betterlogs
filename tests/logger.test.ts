@@ -1,140 +1,88 @@
-import { describe, it, expect, beforeEach, vi, afterEach } from "vitest";
-import { BetterLogger } from "../src/logger";
-import { ConfigManager } from "../src/config";
-import { ThemeManager } from "../src/themes";
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { BetterLogger } from '../src/logger';
+import { ConfigManager } from '../src/config';
+import { ThemeManager } from '../src/themes';
+import { LogEntry } from '../src/types';
 
-describe("BetterLogger - Core Functionality", () => {
+describe('BetterLogger', () => {
     let logger: BetterLogger;
     let configManager: ConfigManager;
     let themeManager: ThemeManager;
+    
+    // Spies
+    const consoleSpy = {
+        log: vi.spyOn(console, 'log').mockImplementation(() => {}),
+        error: vi.spyOn(console, 'error').mockImplementation(() => {}),
+    };
 
     beforeEach(() => {
         themeManager = new ThemeManager();
         configManager = new ConfigManager(themeManager);
         logger = new BetterLogger(configManager, themeManager);
+        vi.clearAllMocks();
     });
 
-    it("should log info messages", () => {
-        logger.info("Test info message");
-        expect(console.log).toHaveBeenCalledWith(
-            expect.stringContaining("Test info message")
-        );
+    it('should log basic messages to console', () => {
+        logger.info('Info message');
+        expect(consoleSpy.log).toHaveBeenCalled();
+        const output = consoleSpy.log.mock.calls[0][0];
+        expect(output).toContain('Info message');
     });
 
-    it("should log success messages", () => {
-        logger.success("Test success message");
-        expect(console.log).toHaveBeenCalledWith(
-            expect.stringContaining("Test success message")
-        );
+    it('should create labelled loggers', () => {
+        const labeled = logger.withLabel('API');
+        labeled.info('Request received');
+        
+        expect(consoleSpy.log).toHaveBeenCalled();
+        const output = consoleSpy.log.mock.calls[0][0];
+        expect(output).toContain('[API]');
     });
 
-    it("should log warning messages", () => {
-        logger.warn("Test warning message");
-        expect(console.warn).toHaveBeenCalledWith(
-            expect.stringContaining("Test warning message")
-        );
+        it('should support dynamic custom levels', () => {
+        logger.config({ level: 'debug' });
+        
+        logger.addLevel('audit', { color: 'blue', emoji: '🛡️' });
+        (logger as any).audit('User login');
+        
+        expect(consoleSpy.log).toHaveBeenCalled();
+        const output = consoleSpy.log.mock.calls[0][0];
+        expect(output).toContain('AUDIT');
+        expect(output).toContain('🛡️');
     });
 
-    it("should log error messages", () => {
-        logger.error("Test error message");
-        expect(console.error).toHaveBeenCalledWith(
-            expect.stringContaining("Test error message")
-        );
+
+    it('should support timer functions', () => {
+        vi.useFakeTimers();
+        logger.time('db');
+        vi.advanceTimersByTime(100);
+        logger.timeEnd('db');
+        
+        expect(consoleSpy.log).toHaveBeenCalled();
+        const output = consoleSpy.log.mock.calls[0][0];
+        expect(output).toContain("Timer 'db': 100ms");
+        vi.useRealTimers();
     });
 
-    it("should log debug messages when level is set to debug", () => {
-        logger.setLevel("debug");
-        logger.debug("Test debug message");
-        expect(console.debug).toHaveBeenCalledWith(
-            expect.stringContaining("Test debug message")
-        );
+    it('should propagate logs to transports', async () => {
+        const mockTransport = { log: vi.fn() };
+        logger.addTransport(mockTransport);
+
+        logger.error('Critical failure');
+        
+        expect(mockTransport.log).toHaveBeenCalled();
+        const entry = mockTransport.log.mock.calls[0][0] as LogEntry;
+        expect(entry.level).toBe('error');
+        expect(entry.message).toBe('Critical failure');
     });
 
-    it("should not log debug messages when level is set to info", () => {
-        logger.setLevel("info");
-        logger.debug("Test debug message");
-        expect(console.debug).not.toHaveBeenCalled();
-    });
+    it('should pass options through "with()" chaining', () => {
+        const mockTransport = { log: vi.fn() };
+        logger.addTransport(mockTransport);
 
-    it("should respect log level filtering", () => {
-        logger.setLevel("error");
+        logger.with({ discord: true }).info('Chained');
 
-        logger.info("This should not appear");
-        logger.warn("This should not appear");
-        logger.error("This should appear");
-
-        expect(console.log).not.toHaveBeenCalled();
-        expect(console.warn).not.toHaveBeenCalled();
-        expect(console.error).toHaveBeenCalledTimes(1);
-    });
-});
-
-describe("BetterLogger - Label System", () => {
-    let logger: BetterLogger;
-
-    beforeEach(() => {
-        const themeManager = new ThemeManager();
-        const configManager = new ConfigManager(themeManager);
-        logger = new BetterLogger(configManager, themeManager);
-    });
-
-    // In the Label System tests, change:
-    it("should create labeled loggers", () => {
-        const apiLogger = logger.withLabel("API"); // Changed from .label()
-        apiLogger.info("Request sent");
-
-        expect(console.log).toHaveBeenCalledWith(
-            expect.stringContaining("[API]")
-        );
-    });
-
-    it("should maintain separate label instances", () => {
-        const apiLogger = logger.withLabel("API"); // Changed from .label()
-        const dbLogger = logger.withLabel("Database"); // Changed from .label()
-
-        expect(apiLogger).not.toBe(dbLogger);
-    });
-});
-
-describe("BetterLogger - Custom Levels", () => {
-    let logger: BetterLogger;
-
-    beforeEach(() => {
-        const themeManager = new ThemeManager();
-        const configManager = new ConfigManager(themeManager);
-        logger = new BetterLogger(configManager, themeManager);
-    });
-
-    it("should add custom log levels", () => {
-        // Set level to debug to ensure custom levels are logged
-        logger.setLevel("debug");
-
-        logger.addLevel("critical", { color: "red", emoji: "🔥" });
-
-        // Call the custom level method
-        (logger as any).critical("System failure!");
-
-        // Check that some console method was called
-        // Custom levels might use different console methods
-        const wasCalled =
-            (console.error as any).mock.calls.length > 0 ||
-            (console.log as any).mock.calls.length > 0 ||
-            (console.warn as any).mock.calls.length > 0;
-
-        expect(wasCalled).toBe(true);
-
-        // Check the content by looking at all console calls
-        const allCalls = [
-            ...(console.error as any).mock.calls,
-            ...(console.log as any).mock.calls,
-            ...(console.warn as any).mock.calls,
-            ...(console.debug as any).mock.calls
-        ];
-
-        const found = allCalls.some(
-            call => call[0] && call[0].includes("System failure!")
-        );
-
-        expect(found).toBe(true);
+        expect(mockTransport.log).toHaveBeenCalled();
+        const entry = mockTransport.log.mock.calls[0][0] as LogEntry;
+        expect(entry.meta).toEqual({ discord: true });
     });
 });

@@ -1,143 +1,54 @@
-name: Test
+name: CI Quality Gate
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ "main", "master" ]
   pull_request:
-    branches: [ main ]
+    branches: [ "main", "master" ]
 
 jobs:
-  test:
-    name: Test on Node.js ${{ matrix.node-version }} and ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
+  quality:
+    name: Validate Code
+    runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [18.x, 20.x]
-        os: [ubuntu-latest]
-    
+        node-version: [18.x, 20.x, 22.x]
+
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v4
 
-    - name: Setup Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v4
-      with:
-        node-version: ${{ matrix.node-version }}
-        cache: 'npm'
+      - name: 🟢 Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
 
-    - name: Install dependencies
-      run: npm ci
+      - name: 📦 Install Dependencies
+        run: npm ci
 
-    - name: Run tests
-      run: npm test
+      - name: 🎨 Check Formatting (Prettier)
+        # Fails if you forgot to run 'npm run format'
+        run: npm run format:check
 
-    - name: Run tests with coverage
-      run: npm run test:coverage
+      - name: 🧹 Lint Code (ESLint)
+        # Fails if you have bad code patterns
+        run: npm run lint
 
-    - name: Build package (skip strict type checking)
-      run: npm run build || echo "Build completed with optional type checks"
+      - name: 🛡️ Type Check (TSC)
+        # Fails if you have TypeScript errors (e.g., wrong types)
+        run: npm run typecheck
 
-    - name: Upload coverage reports to Codecov
-      uses: codecov/codecov-action@v3
-      with:
-        file: ./coverage/lcov.info
-        flags: unittests
-        name: codecov-umbrella
+      - name: 🧪 Run Tests & Coverage
+        # Fails if logic is broken
+        run: npx vitest run --coverage
 
-  lint:
-    name: Lint and Type Check
-    runs-on: ubuntu-latest
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: 📊 Upload to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          slug: anishsharma/betterlogs
 
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: 20.x
-        cache: 'npm'
-
-    - name: Install dependencies
-      run: npm ci
-
-    - name: Run ESLint
-      run: npm run lint
-
-    - name: TypeScript type check (relaxed)
-      run: npx tsc --noEmit --skipLibCheck || echo "Type check completed with relaxed settings"
-
-  security:
-    name: Security Audit
-    runs-on: ubuntu-latest
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: 20.x
-        cache: 'npm'
-
-    - name: Install dependencies
-      run: npm ci
-
-    - name: Run npm audit (production only)
-      run: npm audit --production
-
-  release:
-    name: Create Release
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    needs: [test, lint, security]
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
-
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: 20.x
-        cache: 'npm'
-
-    - name: Install dependencies
-      run: npm ci
-
-    - name: Run tests
-      run: npm test
-
-    - name: Build package for release
-      run: npm run build
-
-    - name: Extract version from package.json
-      id: package-version
-      uses: martinbeentjes/npm-get-version-action@main
-
-    - name: Create GitHub Release
-      uses: softprops/action-gh-release@v1
-      with:
-        tag_name: v${{ steps.package-version.outputs.current-version }}
-        name: Release v${{ steps.package-version.outputs.current-version }}
-        body: |
-          ## What's Changed
-          
-          Release of betterlogs v${{ steps.package-version.outputs.current-version }}
-          
-          ### Features
-          - A lightweight yet powerful logging library
-          - Beautiful themes and custom levels  
-          - Cross-platform support (Node.js + Browser)
-          - 85%+ test coverage
-          - TypeScript support
-          
-          ### Technical Details
-          - 41/41 tests passing
-          - 85.52% code coverage
-          - Comprehensive test suite
-        draft: false
-        prerelease: false
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: 🏗️ Verify Build
+        # Fails if tsup crashes (e.g. export errors)
+        run: npm run build

@@ -15,43 +15,24 @@ export class EnvironmentDetector {
 
     static supportsEmoji(): boolean {
         if (this.isNode()) {
-            // Check if we're in a TTY terminal that supports emoji
             const isTTY = process.stdout?.isTTY;
             const hasNoEmojiFlag = process.env.NO_EMOJI === "true";
             return !!isTTY && !hasNoEmojiFlag;
         }
-
-        if (this.isBrowser()) {
-            // Most modern browsers support emoji
-            return true;
-        }
-
-        // Default to true for other environments
-        return true;
+        return true; 
     }
 }
 
 export class Colorizer {
-    static applyColor(
-        text: string,
-        color: string,
-        isBackground = false
-    ): string {
+    static applyColor(text: string, color: string, isBackground = false): string {
         if (EnvironmentDetector.isNode()) {
             return this.applyNodeColor(text, color, isBackground);
-        } else {
-            return this.applyBrowserColor(text, color, isBackground);
         }
+        return text;
     }
 
-    private static applyNodeColor(
-        text: string,
-        color: string,
-        isBackground: boolean
-    ): string {
-        // In Node.js, we'll use a simple approach since chalk v5 is pure ESM
-        // For production, you might want to use a different color library
-        const colors: { [key: string]: string } = {
+    private static applyNodeColor(text: string, color: string, isBackground: boolean): string {
+        const colors: Record<string, string> = {
             red: "\x1b[31m",
             green: "\x1b[32m",
             yellow: "\x1b[33m",
@@ -60,10 +41,11 @@ export class Colorizer {
             cyan: "\x1b[36m",
             white: "\x1b[37m",
             gray: "\x1b[90m",
+            orange: "\x1b[33m",
             reset: "\x1b[0m"
         };
 
-        const bgColors: { [key: string]: string } = {
+        const bgColors: Record<string, string> = {
             red: "\x1b[41m",
             green: "\x1b[42m",
             yellow: "\x1b[43m",
@@ -76,16 +58,6 @@ export class Colorizer {
 
         const code = isBackground ? bgColors[color] : colors[color];
         return code ? `${code}${text}${colors.reset}` : text;
-    }
-
-    private static applyBrowserColor(
-        text: string/*,
-        _color: string, // Use underscore to indicate intentionally unused
-        _isBackground: boolean // Use underscore to indicate intentionally unused*/
-    ): string {
-        // In browser, we return the text as-is since we can't modify console colors directly
-        // Applications can choose to implement CSS styling in their own console wrappers
-        return text;
     }
 }
 
@@ -101,8 +73,7 @@ export function mergeConfigs(
 }
 
 export function formatTime(date: Date, format: "12h" | "24h"): string {
-    const hours =
-        format === "12h"
+    const hours = format === "12h"
             ? date.getHours() % 12 || 12
             : date.getHours().toString().padStart(2, "0");
 
@@ -115,6 +86,19 @@ export function formatTime(date: Date, format: "12h" | "24h"): string {
     }
 
     return `${hours}:${minutes}:${seconds}`;
+}
+
+export function safeStringify(data: any): string {
+    const seen = new WeakSet();
+    return JSON.stringify(data, (key, value) => {
+        if (typeof value === "object" && value !== null) {
+            if (seen.has(value)) {
+                return "[Circular]";
+            }
+            seen.add(value);
+        }
+        return value;
+    });
 }
 
 export const levelWeights: Record<LogLevel, number> = {

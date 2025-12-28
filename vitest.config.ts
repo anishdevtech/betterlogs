@@ -2,13 +2,12 @@ import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
   test: {
+    globals: true, 
     environment: 'node',
+    clearMocks: true, // Reset mocks between tests automatically
     coverage: {
-      provider: 'istanbul',
-      reporter: ['text', 'json', 'html'],
-      include: ['src/**/*.ts'],
-      exclude: ['src/**/*.test.ts', 'src/**/*.d.ts']
-    },
-    setupFiles: ['./tests/setup.ts']
+      provider: 'v8',
+      reporter: ['text', 'json', 'html']
+    }
   }
 });

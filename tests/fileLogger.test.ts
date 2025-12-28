@@ -1,67 +1,56 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { FileLogger } from '../src/fileLogger';
-import type { LogEntry } from '../src/types';
+import fs from 'fs';
 
-// Mock fs module
-vi.mock('fs', () => ({
-  writeFileSync: vi.fn(),
-  appendFileSync: vi.fn(),
-  existsSync: vi.fn(() => false),
-  mkdirSync: vi.fn()
-}));
+// 1. Use vi.hoisted() so these variables exist BEFORE vi.mock() runs
+const { mockWrite, mocks } = vi.hoisted(() => {
+    const mockWrite = vi.fn();
+    const mockStream = { write: mockWrite, on: vi.fn(), destroyed: false };
+    
+    const mocks = {
+        existsSync: vi.fn(),
+        mkdirSync: vi.fn(),
+        createWriteStream: vi.fn(() => mockStream),
+        appendFileSync: vi.fn(),
+        writeFileSync: vi.fn(),
+    };
+    
+    return { mockWrite, mocks };
+});
 
-import { writeFileSync, appendFileSync, existsSync, mkdirSync } from 'fs';
+// 2. Now use the hoisted variables safely
+vi.mock('fs', () => {
+    return {
+        default: mocks,
+        ...mocks
+    };
+});
 
 describe('FileLogger', () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
+    beforeEach(() => {
+        vi.clearAllMocks();
+    });
 
-  it('should initialize file logger', () => {
-    new FileLogger('test.log');
-    
-    expect(existsSync).toHaveBeenCalled();
-    expect(mkdirSync).toHaveBeenCalled();
-    expect(writeFileSync).toHaveBeenCalledWith('test.log', '', 'utf8');
-  });
+    it('should create directory if needed', () => {
+        vi.mocked(fs.existsSync).mockReturnValue(false);
+        
+        new FileLogger('./logs/test.log');
+        
+        expect(fs.mkdirSync).toHaveBeenCalledWith('./logs', { recursive: true });
+    });
 
-  it('should write log entries', () => {
-    const logger = new FileLogger('test.log');
-    const fixedDate = new Date('2023-01-01T00:00:00.000Z');
-    const entry: LogEntry = {
-      level: 'info',
-      message: 'Test message',
-      timestamp: fixedDate,
-      label: 'TEST'
-    };
+    it('should write to stream', () => {
+        vi.mocked(fs.existsSync).mockReturnValue(true);
+        const logger = new FileLogger('test.log');
+        
+        logger.write({
+            level: 'info',
+            message: 'test',
+            timestamp: new Date()
+        });
 
-    logger.write(entry);
-
-    // Check that appendFileSync was called with the correct arguments
-    expect(appendFileSync).toHaveBeenCalledWith(
-      'test.log',
-      '{"timestamp":"2023-01-01T00:00:00.000Z","level":"info","message":"Test message","label":"TEST"}\n',
-      'utf8'
-    );
-  });
-
-  it('should write log entries with data', () => {
-    const logger = new FileLogger('test.log');
-    const fixedDate = new Date('2023-01-01T00:00:00.000Z');
-    const entry: LogEntry = {
-      level: 'error',
-      message: 'Error occurred',
-      timestamp: fixedDate,
-      label: 'API',
-      data: [{ code: 500, details: 'Internal server error' }]
-    };
-
-    logger.write(entry);
-
-    expect(appendFileSync).toHaveBeenCalledWith(
-      'test.log',
-      '{"timestamp":"2023-01-01T00:00:00.000Z","level":"error","message":"Error occurred","label":"API","data":[{"code":500,"details":"Internal server error"}]}\n',
-      'utf8'
-    );
-  });
+        expect(mockWrite).toHaveBeenCalled();
+        const output = mockWrite.mock.calls[0][0];
+        expect(output).toContain('"message":"test"');
+    });
 });

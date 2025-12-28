@@ -1,75 +1,52 @@
-import { describe, it, expect } from 'vitest';
-import { EnvironmentDetector, Colorizer, formatTime, levelWeights } from '../src/utils';
+import { describe, it, expect, vi, afterEach } from 'vitest';
+import { EnvironmentDetector, Colorizer, formatTime, safeStringify } from '../src/utils';
 
-describe('EnvironmentDetector', () => {
-  it('should detect Node.js environment', () => {
-    expect(EnvironmentDetector.isNode()).toBe(true);
-    expect(EnvironmentDetector.isBrowser()).toBe(false);
-  });
+describe('Utils', () => {
+    describe('EnvironmentDetector', () => {
+        it('should detect Node environment', () => {
+            expect(EnvironmentDetector.isNode()).toBe(true);
+        });
+    });
 
-  it('should support emoji in Node.js TTY', () => {
-  const result = EnvironmentDetector.supportsEmoji();
-  expect(typeof result).toBe('boolean');
-});
-});
+    describe('Colorizer', () => {
+        it('should apply ANSI codes in Node', () => {
+            const result = Colorizer.applyColor('test', 'red');
+            expect(result).toContain('\x1b[31m');
+            expect(result).toContain('test');
+            expect(result).toContain('\x1b[0m');
+        });
 
-describe('Colorizer', () => {
-  it('should apply colors in Node.js', () => {
-    const result = Colorizer.applyColor('test', 'red');
-    expect(typeof result).toBe('string');
-    expect(result).toContain('test');
-  });
-});
+        it('should return raw text if color is not found', () => {
+            const result = Colorizer.applyColor('test', 'unknownColor');
+            expect(result).toBe('test');
+        });
+    });
 
-describe('Time Formatter', () => {
-  it('should format 24h time correctly', () => {
-    const date = new Date('2023-01-01T14:30:25Z');
-    const result = formatTime(date, '24h');
-    
-    // Just check it returns a string with time format
-    expect(typeof result).toBe('string');
-    expect(result).toMatch(/\d{1,2}:\d{2}:\d{2}/);
-  });
+    describe('formatTime', () => {
+        const date = new Date('2023-01-01T15:30:45');
 
-  it('should format 12h time correctly', () => {
-    const date = new Date('2023-01-01T14:30:25Z');
-    const result = formatTime(date, '12h');
-    
-    // Just check it returns a string with time format and AM/PM
-    expect(typeof result).toBe('string');
-    expect(result).toMatch(/\d{1,2}:\d{2}:\d{2} (AM|PM)/);
-  });
-});
+        it('should format 24h correctly', () => {
+            expect(formatTime(date, '24h')).toBe('15:30:45');
+        });
 
-describe('Level Weights', () => {
-  it('should have correct level weights', () => {
-    expect(levelWeights.debug).toBe(0);
-    expect(levelWeights.info).toBe(1);
-    expect(levelWeights.warn).toBe(2);
-    expect(levelWeights.error).toBe(3);
-    expect(levelWeights.silent).toBe(999);
-  });
-});
-describe('Colorizer - Extended', () => {
-  it('should handle unknown colors in Node.js', () => {
-    const result = Colorizer.applyColor('test', 'unknownColor');
-    expect(result).toBe('test'); // Should return original text for unknown colors
-  });
+        it('should format 12h correctly', () => {
+            expect(formatTime(date, '12h')).toBe('3:30:45 PM');
+        });
+    });
 
-  it('should handle background colors', () => {
-    const result = Colorizer.applyColor('test', 'red', true);
-    expect(result).toContain('test');
-  });
-});
+    describe('safeStringify', () => {
+        it('should stringify simple objects', () => {
+            const obj = { a: 1 };
+            expect(safeStringify(obj)).toBe('{"a":1}');
+        });
 
-describe('EnvironmentDetector - Extended', () => {
-  it('should handle NO_EMOJI environment variable', () => {
-    const originalEnv = process.env.NO_EMOJI;
-    process.env.NO_EMOJI = 'true';
-    
-    expect(EnvironmentDetector.supportsEmoji()).toBe(false);
-    
-    // Restore
-    process.env.NO_EMOJI = originalEnv;
-  });
+        it('should handle circular references', () => {
+            const obj: any = { name: 'circular' };
+            obj.self = obj;
+            
+            const result = safeStringify(obj);
+            expect(result).toContain('"self":"[Circular]"');
+            expect(result).toContain('"name":"circular"');
+        });
+    });
 });

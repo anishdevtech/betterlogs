@@ -1,12 +1,22 @@
-
 # @anish2dev/betterlogs 🚀
 
 A lightweight yet powerful logging library that makes console output elegant, expressive, and customizable for both Node.js and browsers.
 
-![npm](https://img.shields.io/npm/v/@anishsharma/betterlogs)
-![npm](https://img.shields.io/npm/dt/@/anishsharma/betterlogs)
-![GitHub](https://img.shields.io/github/license/anishdevtech/betterlogs)
-![Tests](https://github.com/anishdevtech/betterlogs/actions/workflows/test.yml/badge.svg)
+<div align="center">
+
+[![npm version](https://img.shields.io/npm/v/@anishsharma/betterlogs?style=flat-square&logo=npm&color=CB3837)](https://www.npmjs.com/package/@anishsharma/betterlogs)
+[![npm downloads](https://img.shields.io/npm/dt/@anishsharma/betterlogs?style=flat-square&logo=npm&color=CB3837)](https://www.npmjs.com/package/@anishsharma/betterlogs)
+[![GitHub release](https://img.shields.io/github/v/release/anishdevtech/betterlogs?style=flat-square&logo=github&color=181717)](https://github.com/anishdevtech/betterlogs/releases)
+[![GitHub stars](https://img.shields.io/github/stars/anishdevtech/betterlogs?style=flat-square&logo=github&color=181717)](https://github.com/anishdevtech/betterlogs/stargazers)
+[![License](https://img.shields.io/github/license/anishdevtech/betterlogs?style=flat-square&color=green)](https://github.com/anishdevtech/betterlogs/blob/main/LICENSE)
+
+[![Tests](https://img.shields.io/github/actions/workflow/status/anishdevtech/betterlogs/test.yml?style=flat-square&logo=github-actions&label=tests)](https://github.com/anishdevtech/betterlogs/actions/workflows/test.yml)
+[![Build](https://img.shields.io/github/actions/workflow/status/anishdevtech/betterlogs/build.yml?style=flat-square&logo=github-actions&label=build)](https://github.com/anishdevtech/betterlogs/actions)
+[![Coverage](https://img.shields.io/codecov/c/github/anishdevtech/betterlogs?style=flat-square&logo=codecov)](https://codecov.io/gh/anishdevtech/betterlogs)
+[![TypeScript](https://img.shields.io/badge/TypeScript-Ready-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Node.js](https://img.shields.io/badge/Node.js-%3E%3D14-339933?style=flat-square&logo=node.js&logoColor=white)](https://nodejs.org/)
+
+</div>
 
 ## ✨ Features
 
@@ -20,6 +30,8 @@ A lightweight yet powerful logging library that makes console output elegant, ex
 - 🏷️ **Label-based Logging**
 - ⏱️ **Timer Utilities**
 - 📁 **File Logging** (Node.js)
+- 🔌 **Discord Integration** (Webhook transports)
+- 🎯 **Smart Filtering** (Level, label, and content-based)
 
 ## 📦 Installation
 
@@ -27,124 +39,56 @@ A lightweight yet powerful logging library that makes console output elegant, ex
 npm install @anishsharma/betterlogs
 ```
 
-🚀 Quick Start
+## 💬 Support
 
-```typescript
-import log from '@anishsharma/betterlogs';
+Need help or have questions? Join our community!
 
-// Basic logging
-log.info('Server starting...');
-log.success('Database connected!');
-log.warn('Memory usage high');
-log.error('Failed to load config');
+[![Discord](https://img.shields.io/badge/Discord-Join%20Server-5865F2?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/kEk4sTRXVX)
 
-// Customization
-log.config({
-  theme: 'neon',
-  showTimestamp: true,
-  showEmoji: true
-});
+Get support, share feedback, and connect with other developers using BetterLogs.
 
-// Labeled logging
-log.label('API').info('Request sent');
-log.label('Auth').error('Invalid token');
+## 📚 Documentation
 
-// Custom levels
-log.addLevel('critical', { color: 'red', emoji: '🔥' });
-log.critical('System on fire!');
+**📖 [View Full Documentation](./DOCUMENTATION.md)**
 
-// Timer utilities
-log.time('databaseQuery');
-// ... some operation
-log.timeEnd('databaseQuery'); // Logs: Timer 'databaseQuery': 150ms
-```
+Our comprehensive documentation covers:
 
-🎨 Themes
+- ⚙️ Configuration & Customization
+- 🔌 Discord Integration & Transports
+- 🎯 Smart Filtering Strategies
+- ⛓ Granular Control with `.with()`
+- 💾 File Logging
+- 🛠 Advanced Features
+- 🌐 Browser Support
+- 📝 Complete Examples
 
-```typescript
-// Built-in themes
-log.config({ theme: 'dark' });    // Default
-log.config({ theme: 'light' });
-log.config({ theme: 'neon' });
-log.config({ theme: 'minimal' });
-
-// Custom themes
-log.addTheme('sunset', {
-  info: { color: '#FFA500', emoji: '🌅' },
-  success: { color: '#FF6B6B', emoji: '🌟' },
-  // ... define all levels
-});
-```
-
-📚 API Reference
-
-Core Methods
-
-- log.info(message, ...data)
-- log.success(message, ...data)
-- log.warn(message, ...data)
-- log.error(message, ...data)
-- log.debug(message, ...data)
-
-Configuration
-
-- log.config(options)
-- log.setLevel(level)
-- log.setMode('pretty' | 'json')
-
-Advanced Features
-
-- log.label(name) - Create labeled logger
-- log.addLevel(name, config) - Add custom log level
-- log.table(data) - Pretty-print tables
-- log.time(label) / log.timeEnd(label) - Performance timing
-- log.file(path) - File logging (Node.js only)
-
-🌐 Browser Usage
-
-```html
-<script type="module">
-  import log from 'https://esm.sh/@anishsharma/betterlogs';
-  
-  log.info('Browser logging activated!');
-  log.success('Betterlogs works in browsers!');
-</script>
-```
-
-📋 Configuration Options
-
-```typescript
-interface BetterLogsConfig {
-  showTimestamp?: boolean;      // Default: true
-  showEmoji?: boolean;          // Default: true  
-  theme?: string | Theme;       // Default: 'dark'
-  level?: LogLevel;            // Default: 'info'
-  mode?: 'pretty' | 'json';    // Default: 'pretty'
-  timestampFormat?: '12h' | '24h'; // Default: '24h'
-}
-```
-
-🤝 Contributing
+## 🤝 Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
 
 1. Fork the repository
-2. Create your feature branch (git checkout -b feature/amazing-feature)
-3. Commit your changes (git commit -m 'Add some amazing feature')
-4. Push to the branch (git push origin feature/amazing-feature)
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
-📄 License
+## 📄 License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
 
-👨‍💻 Author
+## 👨‍💻 Author
 
-Anish Sharma
+**Anish Sharma**
 
-· GitHub: @anishdevtech
-· Email: anishdevtech@gmail.com
+- GitHub: [@anishdevtech](https://github.com/anishdevtech)
+- Email: anishdev02@gmail.com
 
 ---
 
-Made with ❤️ by Anish Sharma
+<div align="center">
+
+**Made with ❤️ by Anish Sharma**
+
+[Documentation](./DOCUMENTATION.md) • [GitHub](https://github.com/anishdevtech/betterlogs) • [NPM](https://npmjs.com/package/@anishsharma/betterlogs)
+
+</div>

@@ -1,24 +1,25 @@
 import { LogEntry } from "./types";
-import { writeFileSync, appendFileSync, existsSync, mkdirSync } from "fs";
+import { createWriteStream, WriteStream, existsSync, mkdirSync } from "fs";
 import { dirname } from "path";
+import { safeStringify } from "./utils";
 
 export class FileLogger {
     private filePath: string;
+    private stream: WriteStream | null = null;
 
     constructor(filePath: string) {
         this.filePath = filePath;
         this.ensureDirectoryExists();
-        this.initializeFile();
+        this.initializeStream();
     }
 
     write(entry: LogEntry): void {
-        const logLine = this.formatLogEntry(entry);
-
-        try {
-            appendFileSync(this.filePath, logLine + "\n", "utf8");
-        } catch (error) {
-            console.error("Failed to write to log file:", error);
+        if (!this.stream || this.stream.destroyed) {
+            this.initializeStream();
         }
+
+        const logLine = this.formatLogEntry(entry);
+        this.stream?.write(logLine + "\n");
     }
 
     private ensureDirectoryExists(): void {
@@ -28,14 +29,19 @@ export class FileLogger {
         }
     }
 
-    private initializeFile(): void {
-        if (!existsSync(this.filePath)) {
-            writeFileSync(this.filePath, "", "utf8");
+    private initializeStream(): void {
+        try {
+            this.stream = createWriteStream(this.filePath, { flags: 'a' });
+            this.stream.on('error', (err) => {
+                console.error('FileLogger Stream Error:', err);
+            });
+        } catch (error) {
+            console.error("Failed to initialize log file stream:", error);
         }
     }
 
     private formatLogEntry(entry: LogEntry): string {
-        return JSON.stringify({
+        return safeStringify({
             timestamp: entry.timestamp.toISOString(),
             level: entry.level,
             message: entry.message,
