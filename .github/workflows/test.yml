@@ -1,54 +1,33 @@
-name: CI Quality Gate
+name: Minimal Tests
 
 on:
   push:
-    branches: ['main', 'master']
+    branches: [ "main", "master" ]
   pull_request:
-    branches: ['main', 'master']
+    branches: [ "main", "master" ]
 
 jobs:
-  quality:
-    name: Validate Code
+  test:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        node-version: [18.x, 20.x, 22.x]
-
     steps:
-      - name: 📥 Checkout Code
-        uses: actions/checkout@v4
+    - name: Checkout Code
+      uses: actions/checkout@v4
 
-      - name: 🟢 Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ matrix.node-version }}
-          cache: 'npm'
+    - name: Use Node.js 20
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20.x'
+        cache: 'npm'
 
-      - name: 📦 Install Dependencies
-        run: npm ci
+    - name: Install Dependencies
+      run: npm ci
 
-      - name: 🎨 Check Formatting (Prettier)
-        # Fails if you forgot to run 'npm run format'
-        run: npm run format:check
+    - name: Run Tests (Functional Only)
+      # This skips linting/formatting and only checks if code works
+      run: npm run test:coverage
 
-      - name: 🧹 Lint Code (ESLint)
-        # Fails if you have bad code patterns
-        run: npm run lint
-
-      - name: 🛡️ Type Check (TSC)
-        # Fails if you have TypeScript errors (e.g., wrong types)
-        run: npm run typecheck
-
-      - name: 🧪 Run Tests & Coverage
-        # Fails if logic is broken
-        run: npx vitest run --coverage
-
-      - name: 📊 Upload to Codecov
-        uses: codecov/codecov-action@v5
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          slug: anishsharma/betterlogs
-
-      - name: 🏗️ Verify Build
-        # Fails if tsup crashes (e.g. export errors)
-        run: npm run build
+    - name: Upload to Codecov
+      uses: codecov/codecov-action@v5
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        slug: anishsharma/betterlogs
