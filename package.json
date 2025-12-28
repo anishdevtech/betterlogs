@@ -1,65 +1,71 @@
 {
-  "name": "@anishsharma/betterlogs",
-  "version": "1.0.5",
-  "description": "A lightweight yet powerful logging library that makes console output elegant, expressive, and customizable",
-  "main": "./dist/index.js",
-  "module": "./dist/index.mjs",
-  "types": "./dist/index.d.ts",
-  "type": "module",
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.mjs",
-      "require": "./dist/index.js"
+    "name": "@anishsharma/betterlogs",
+    "version": "1.0.6",
+    "description": "A lightweight yet powerful logging library that makes console output elegant, expressive, and customizable",
+    "main": "./dist/index.cjs",
+    "module": "./dist/index.js",
+    "types": "./dist/index.d.ts",
+    "type": "module",
+    "exports": {
+        ".": {
+            "types": "./dist/index.d.ts",
+            "import": "./dist/index.js",
+            "require": "./dist/index.cjs"
+        }
+    },
+    "scripts": {
+        "test": "vitest run",
+        "test:coverage": "vitest run --coverage",
+        "build": "tsup",
+        "lint": "eslint 'src/**/*.ts'",
+        "lint:fix": "eslint 'src/**/*.ts' --fix",
+        "format": "prettier --write .",
+        "format:check": "prettier --check .",
+        "typecheck": "tsc --noEmit"
+    },
+    "keywords": [
+        "logging",
+        "console",
+        "logger",
+        "browser",
+        "node",
+        "typescript",
+        "pretty-logs",
+        "colored-logs",
+        "themes",
+        "emoji-logs",
+        "discord",
+        "discord-webhook",
+        "alerting",
+        "monitoring",
+        "error-tracking",
+        "production-logger"
+    ],
+    "author": "Anish Sharma <anishdev02@gmail.com> (https://github.com/anishdevtech)",
+    "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/anishdevtech/betterlogs.git"
+    },
+    "homepage": "https://github.com/anishdevtech/betterlogs#readme",
+    "bugs": {
+        "url": "https://github.com/anishdevtech/betterlogs/issues"
+    },
+    "engines": {
+        "node": ">=16.0.0"
+    },
+    "devDependencies": {
+        "@types/node": "^20.0.0",
+        "@typescript-eslint/eslint-plugin": "^8.46.3",
+        "@typescript-eslint/parser": "^8.46.3",
+        "@vitest/coverage-istanbul": "^4.0.7",
+        "@vitest/coverage-v8": "^4.0.7",
+        "@vitest/ui": "^4.0.7",
+        "eslint": "^8.57.1",
+        "jsdom": "^23.0.0",
+        "prettier": "^3.0.0",
+        "tsup": "^8.0.0",
+        "typescript": "^5.0.0",
+        "vitest": "^4.0.7"
     }
-  },
-  "scripts": {
-    "test": "vitest run",
-    "test:coverage": "vitest run --coverage",
-    "build": "tsup",
-    "lint": "eslint 'src/**/*.ts'",
-    "lint:fix": "eslint 'src/**/*.ts' --fix",
-    "format": "prettier --write .",
-    "format:check": "prettier --check .",
-    "typecheck": "tsc --noEmit"
-  },
-  "keywords": [
-    "logging",
-    "console",
-    "logger",
-    "browser",
-    "node",
-    "typescript",
-    "pretty-logs",
-    "colored-logs",
-    "themes",
-    "emoji-logs"
-  ],
-  "author": "Anish Sharma <anishdev02@gmail.com> (https://github.com/anishdevtech)",
-  "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/anishdevtech/betterlogs.git"
-  },
-  "homepage": "https://github.com/anishdevtech/betterlogs#readme",
-  "bugs": {
-    "url": "https://github.com/anishdevtech/betterlogs/issues"
-  },
-  "engines": {
-    "node": ">=16.0.0"
-  },
-  "devDependencies": {
-    "@types/node": "^20.0.0",
-    "@typescript-eslint/eslint-plugin": "^8.46.3",
-    "@typescript-eslint/parser": "^8.46.3",
-    "@vitest/coverage-istanbul": "^4.0.7",
-    "@vitest/coverage-v8": "^4.0.7",
-    "@vitest/ui": "^4.0.7",
-    "eslint": "^8.57.1",
-    "jsdom": "^23.0.0",
-    "prettier": "^3.0.0",
-    "tsup": "^8.0.0",
-    "typescript": "^5.0.0",
-    "vitest": "^4.0.7"
-  }
 }
