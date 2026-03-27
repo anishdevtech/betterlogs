@@ -28,4 +28,21 @@ describe('ThemeManager', () => {
     themeManager.registerTheme(customTheme);
     expect(themeManager.getTheme('ocean')).toEqual(customTheme);
   });
+
+  it('should list registered themes', () => {
+    const themes = themeManager.listThemes();
+    expect(themes).toContain('dark');
+    expect(themes).toContain('light');
+  });
+
+  it('should deregister a theme by name', () => {
+    const customTheme: Theme = {
+      name: 'ocean',
+      levels: builtInThemes.dark.levels
+    };
+
+    themeManager.registerTheme(customTheme);
+    expect(themeManager.deregisterTheme('ocean')).toBe(true);
+    expect(themeManager.getTheme('ocean')).toBeUndefined();
+  });
 });

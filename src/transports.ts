@@ -1,5 +1,5 @@
 import { LogEntry, LogTransport, LogLevel } from './types';
-import { safeStringify } from './utils';
+import { safeStringify, EnvironmentDetector } from './utils';
 
 export interface TransportFilter {
   minLevel?: LogLevel | string;
@@ -100,14 +100,66 @@ export class DiscordTransport implements LogTransport {
         });
       }
 
-      await fetch(this.options.webhookUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
+      const body = JSON.stringify(payload);
+
+      if (typeof fetch !== 'undefined') {
+        await fetch(this.options.webhookUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body
+        });
+        return;
+      }
+
+      if (EnvironmentDetector.isNode()) {
+        await this.sendViaNodeRequest(this.options.webhookUrl, body);
+        return;
+      }
+
+      console.error('Failed to send log to Discord: Fetch API is unavailable in this environment.');
     } catch (err) {
       console.error('Failed to send log to Discord:', err);
     }
+  }
+
+  private async sendViaNodeRequest(webhookUrl: string, body: string): Promise<void> {
+    const parsedUrl = new URL(webhookUrl);
+    const isHttps = parsedUrl.protocol === 'https:';
+    const mod = await import(isHttps ? 'node:https' : 'node:http');
+    const requestFn = mod.request;
+
+    return new Promise<void>((resolve, reject) => {
+      const req = requestFn(
+        parsedUrl,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Content-Length': Buffer.byteLength(body)
+          }
+        },
+        (res: any) => {
+          if (res.statusCode >= 200 && res.statusCode < 300) {
+            resolve();
+            return;
+          }
+
+          const chunks: Buffer[] = [];
+          res.on('data', (chunk: Buffer) => chunks.push(chunk));
+          res.on('end', () => {
+            reject(
+              new Error(
+                `Discord webhook request failed with status ${res.statusCode}: ${Buffer.concat(chunks).toString()}`
+              )
+            );
+          });
+        }
+      );
+
+      req.on('error', reject);
+      req.write(body);
+      req.end();
+    });
   }
 
   private getDiscordColor(level: string): number {

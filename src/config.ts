@@ -39,6 +39,10 @@ export class ConfigManager {
   }
 
   shouldLog(level: LogLevel): boolean {
+    if (level === 'silent') {
+      return false;
+    }
+
     const levelWeights = {
       debug: 0,
       info: 1,

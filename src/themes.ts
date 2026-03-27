@@ -63,6 +63,14 @@ export class ThemeManager {
     this.themes.set(theme.name, theme);
   }
 
+  listThemes(): string[] {
+    return Array.from(this.themes.keys());
+  }
+
+  deregisterTheme(name: string): boolean {
+    return this.themes.delete(name);
+  }
+
   getTheme(name: string): Theme | undefined {
     return this.themes.get(name);
   }

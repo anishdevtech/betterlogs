@@ -1,4 +1,4 @@
-import { LogEntry, LogLevel, BetterLogsConfig, LogTransport, LogOptions } from './types';
+import { LogEntry, LogLevel, BetterLogsConfig, LogTransport, LogOptions, Theme } from './types';
 import { ConfigManager } from './config';
 import { ThemeManager } from './themes';
 import { Formatter } from './formatter';
@@ -45,19 +45,19 @@ export class BetterLogger {
   }
 
   info(message: string, ...data: unknown[]): void {
-    this.log('info', message, data);
+    this.writeLog('info', message, data);
   }
   success(message: string, ...data: unknown[]): void {
-    this.log('success', message, data);
+    this.writeLog('success', message, data);
   }
   warn(message: string, ...data: unknown[]): void {
-    this.log('warn', message, data);
+    this.writeLog('warn', message, data);
   }
   error(message: string, ...data: unknown[]): void {
-    this.log('error', message, data);
+    this.writeLog('error', message, data);
   }
   debug(message: string, ...data: unknown[]): void {
-    this.log('debug', message, data);
+    this.writeLog('debug', message, data);
   }
 
   withLabel(labelName: string): BetterLogger {
@@ -83,6 +83,34 @@ export class BetterLogger {
     this.configManager.updateConfig({ mode });
   }
 
+  setTheme(theme: string | Theme): void {
+    if (typeof theme === 'object') {
+      this.themeManager.registerTheme(theme);
+      this.configManager.updateConfig({ theme: theme.name });
+    } else {
+      this.configManager.updateConfig({ theme });
+    }
+  }
+
+  toggleEmoji(enabled = true): void {
+    this.configManager.updateConfig({ showEmoji: enabled });
+  }
+
+  setTimestampFormat(format: '12h' | '24h'): void {
+    this.configManager.updateConfig({ timestampFormat: format });
+  }
+
+  log(level: string, message: string, ...data: unknown[]): void {
+    this.writeLog(level, message, data);
+  }
+
+  silent(message?: string, ...data: unknown[]): void {
+    if (!message) {
+      return;
+    }
+    this.writeLog('silent', message, data);
+  }
+
   addLevel(name: string, config: { color: string; emoji: string }): void {
     this.customLevels.set(name, config);
 
@@ -92,12 +120,41 @@ export class BetterLogger {
     }
 
     (this as any)[name] = (message: string, ...data: unknown[]) => {
-      this.log(name, message, data);
+      this.writeLog(name, message, data);
     };
   }
 
   group(name: string): BetterLogger {
     return this.withLabel(name);
+  }
+
+  removeTransport(transport: LogTransport): boolean {
+    const index = this.transports.indexOf(transport);
+    if (index !== -1) {
+      this.transports.splice(index, 1);
+      return true;
+    }
+    return false;
+  }
+
+  clearTransports(): void {
+    this.transports = [];
+  }
+
+  timeLog(label: string): void {
+    const startTime = this.activeTimers.get(label);
+    if (!startTime) {
+      this.info(`Timer '${label}' has not been started`);
+      return;
+    }
+
+    const duration = Date.now() - startTime;
+    this.info(`Timer '${label}': ${duration}ms`);
+    this.activeTimers.set(label, Date.now());
+  }
+
+  clearTimers(): void {
+    this.activeTimers.clear();
   }
 
   table(data: unknown[] | object): void {
@@ -130,7 +187,11 @@ export class BetterLogger {
     }
   }
 
-  private log(level: string, message: string, data: unknown[]): void {
+  private writeLog(level: string, message: string, data: unknown[]): void {
+    if (level === 'silent') {
+      return;
+    }
+
     const levelToCheck = this.customLevels.has(level) ? 'debug' : level;
 
     if (!this.configManager.shouldLog(levelToCheck as LogLevel)) {

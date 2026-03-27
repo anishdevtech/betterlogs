@@ -1,386 +1,270 @@
-# 📚 BetterLogs
+# BetterLogs Documentation
 
-> **The ultimate logging solution for Node.js & Browser applications**  
-> Zero configuration • Beautiful output • Discord integration • Type-safe
+A complete developer guide for using BetterLogs in Node.js and browser applications.
 
----
+## Installation
 
-## 🚀 Quick Start
-
-Get up and running in seconds with zero configuration required.
+Install from npm:
 
 ```bash
 npm install @anishsharma/betterlogs
 ```
 
-### ✨ Key Features
+## What is BetterLogs?
 
-| Feature                 | Description                                 |
-| ----------------------- | ------------------------------------------- |
-| ⚡ **Zero Config**      | Start logging immediately without any setup |
-| 🎨 **Beautiful Output** | Color-coded logs with emojis and timestamps |
-| 🔒 **Type Safe**        | Full TypeScript support out of the box      |
-| 🔌 **Discord Ready**    | Built-in webhook integration for alerts     |
-| 💾 **File Persistence** | Automatic file logging in Node.js           |
-| 🌐 **Universal**        | Works seamlessly in Node.js and browsers    |
+BetterLogs is a lightweight logging library that provides:
 
-### 📝 Basic Usage
+- simple console logging with nice themes,
+- custom log levels,
+- label-based log grouping,
+- JSON and pretty output modes,
+- Discord webhooks and custom transports,
+- file logging support in Node.js,
+- timer helpers, and
+- per-log metadata with `.with()`.
 
-```javascript
-import log from '@anishsharma/betterlogs';
+## Importing the package
 
-// Standard logging levels
-log.info('Server starting on port 3000');
-log.success('Database connected successfully');
-log.warn('Memory usage is above 80%');
-log.error('Failed to process payment');
-log.debug('Payload size: 12kb'); // Hidden by default
+```ts
+import log, { DiscordTransport, Theme, BetterLogger } from '@anishsharma/betterlogs';
+```
 
-// Organize with Labels
+The package exports a default logger object named `log`. You can also create separate logger instances with `log.create()`.
+
+## Basic usage
+
+```ts
+log.info('Application started');
+log.success('Operation completed');
+log.warn('Warning: check input');
+log.error('An error occurred');
+log.debug('Debugging details');
+```
+
+## Configuration
+
+Use `log.config()` to set global logging behavior:
+
+```ts
+log.config({
+  theme: 'neon',
+  level: 'debug',
+  showTimestamp: true,
+  showEmoji: true,
+  mode: 'pretty',
+  timestampFormat: '24h'
+});
+```
+
+### Configuration options
+
+- `theme`: `'dark' | 'light' | 'neon' | 'minimal' | Theme`
+- `level`: `'debug' | 'info' | 'success' | 'warn' | 'error' | 'silent'`
+- `showTimestamp`: `true | false`
+- `showEmoji`: `true | false`
+- `mode`: `'pretty' | 'json'`
+- `timestampFormat`: `'12h' | '24h'`
+- `file`: optional file path for Node.js log output
+
+## Summary of logger methods
+
+| Method | Description |
+|---|---|
+| `log.info()` | Standard info log |
+| `log.success()` | Success message |
+| `log.warn()` | Warning message |
+| `log.error()` | Error message |
+| `log.debug()` | Debug message |
+| `log.log(level, message)` | Generic logging with any level |
+| `log.silent(message)` | Suppress output for a specific message |
+| `log.withLabel(name)` | Create a named label group |
+| `log.with(options)` | Apply per-log metadata |
+| `log.config(config)` | Update logger configuration |
+| `log.setLevel(level)` | Set the minimum logging level |
+| `log.setMode(mode)` | Switch output between `pretty` and `json` |
+| `log.setTheme(theme)` | Apply a theme by name or object |
+| `log.toggleEmoji(flag)` | Enable or disable emoji output |
+| `log.setTimestampFormat(format)` | Choose between `12h` or `24h` time display |
+| `log.time(label)` | Start a timer |
+| `log.timeEnd(label)` | End a timer and print duration |
+| `log.timeLog(label)` | Print elapsed time without stopping the timer |
+| `log.clearTimers()` | Clear all active timers |
+| `log.table(data)` | Print an array or object as a table |
+| `log.file(path)` | Enable file logging in Node.js |
+| `log.addTransport(transport)` | Add a custom transport |
+| `log.removeTransport(transport)` | Remove a transport |
+| `log.clearTransports()` | Remove all transports |
+| `log.addTheme(theme)` | Register a new theme |
+| `log.listThemes()` | List registered themes |
+| `log.deregisterTheme(name)` | Remove a theme by name |
+| `log.addLevel(name, config)` | Register a custom log level |
+| `log.create(config)` | Create a new logger instance |
+
+## Theme usage
+
+Built-in themes are: `dark`, `light`, `neon`, `minimal`.
+
+```ts
+log.setTheme('light');
+```
+
+### Custom theme example
+
+```ts
+log.setTheme({
+  name: 'ocean',
+  levels: {
+    info: { color: 'blue', emoji: '🌊' },
+    success: { color: 'green', emoji: '✅' },
+    warn: { color: 'yellow', emoji: '⚠️' },
+    error: { color: 'red', emoji: '❌' },
+    debug: { color: 'magenta', emoji: '🔍' }
+  }
+});
+```
+
+### Manage themes
+
+```ts
+log.addTheme(customTheme);
+console.log(log.listThemes());
+log.deregisterTheme('ocean');
+```
+
+## Custom levels
+
+Add your own log severity levels:
+
+```ts
+log.addLevel('audit', { color: 'magenta', emoji: '🛡️' });
+(log as any).audit('Audit event recorded');
+```
+
+## Label groups and module logging
+
+Labels help organize logs by component:
+
+```ts
 const authLog = log.label('Auth');
 authLog.info('User logged in');
-// Output: [INFO] [Auth] User logged in
 ```
 
----
+You can also use `group()` as an alias:
 
-## ⚙️ Configuration
-
-Customize the look and behavior to match your preferences using `log.config()`.
-
-### Configuration Options
-
-| Option            | Type      | Default    | Description                                                                |
-| ----------------- | --------- | ---------- | -------------------------------------------------------------------------- |
-| `theme`           | `string`  | `'dark'`   | Choose from: `dark`, `light`, `neon`, `minimal`, or custom object          |
-| `showTimestamp`   | `boolean` | `true`     | Display timestamp with each log                                            |
-| `showEmoji`       | `boolean` | `true`     | Show emojis for different log levels                                       |
-| `level`           | `string`  | `'info'`   | Minimum level to display (`debug` < `info` < `success` < `warn` < `error`) |
-| `mode`            | `string`  | `'pretty'` | Output format: `pretty` or `json` (for log aggregators)                    |
-| `timestampFormat` | `string`  | `'24h'`    | Time format: `24h` or `12h`                                                |
-
-### 🎨 Example Configuration
-
-```javascript
-log.config({
-  theme: 'neon', // Use the neon theme
-  showTimestamp: true, // Show timestamps
-  showEmoji: true, // Show emojis
-  level: 'info', // Minimum level to display
-  mode: 'pretty', // Pretty print format
-  timestampFormat: '24h' // 24-hour time format
-});
+```ts
+const apiLog = log.group('API');
+apiLog.debug('Request received');
 ```
 
----
+## Per-log metadata with `.with()`
 
-## 🔌 Discord Integration (Transports)
+Apply metadata for a single log entry:
 
-Send critical alerts directly to Discord using the built-in transport system.
-
-> 💡 **Pro Tip:** Discord transports are perfect for monitoring production errors and critical events in real-time!
-
-### 🔧 Basic Setup
-
-**Default behavior:** Sends errors only
-
-```javascript
-import log, { DiscordTransport } from '@anishsharma/betterlogs';
-
-const discordLayer = new DiscordTransport({
-  webhookUrl: 'https://discord.com/api/webhooks/YOUR_WEBHOOK_URL'
-});
-
-log.addTransport(discordLayer);
+```ts
+log.with({ discord: true }).success('Important event');
+log.with({ discord: false }).error('Local error only');
 ```
 
-### 🎚️ Custom Level Filtering
+This is useful for transport-level decisions such as Discord forwarding.
 
-Change the minimum level required to trigger a webhook:
+## Timers
 
-```javascript
-new DiscordTransport({
-  webhookUrl: 'https://discord.com/api/webhooks/YOUR_WEBHOOK_URL',
-  filter: {
-    minLevel: 'warn' // Sends 'warn' and 'error' logs
-  }
-});
+```ts
+log.time('operation');
+// ... run work ...
+log.timeLog('operation');
+log.timeEnd('operation');
+log.clearTimers();
 ```
 
----
+## Table output
 
-## 🎯 Smart Filtering
-
-Declarative control over what gets sent to external services like Discord.
-
-### 🔢 Level-Based Filtering
-
-```javascript
-filter: {
-  minLevel: 'error'; // Only send error-level logs and above
-}
+```ts
+log.table([
+  { id: 1, name: 'Alice' },
+  { id: 2, name: 'Bob' }
+]);
 ```
 
-### 🏷️ Exception Handling
+## File logging (Node.js only)
 
-```javascript
-filter: {
-  minLevel: 'error',
-  includeLevels: ['critical']  // Always send 'critical' logs
-}
-```
-
-### 📋 Label Whitelist
-
-```javascript
-filter: {
-  onlyLabels: ['Payment', 'Security', 'Auth'];
-  // Only send logs from these specific modules
-}
-```
-
-### 🔍 Content-Based Filtering
-
-```javascript
-filter: {
-  contains: 'Database'; // Only send logs containing this text
-}
-```
-
-### 🎛️ Combined Filtering
-
-Use multiple filters together for precise control:
-
-```javascript
-new DiscordTransport({
-  webhookUrl: 'https://discord.com/api/webhooks/YOUR_WEBHOOK_URL',
-  filter: {
-    // 1. Minimum standard
-    minLevel: 'error',
-
-    // 2. Exceptions: Always send 'critical' logs
-    includeLevels: ['critical'],
-
-    // 3. Whitelist: Only send logs from these modules
-    onlyLabels: ['Payment', 'Security', 'Auth'],
-
-    // 4. Content check: Only send logs containing this text
-    contains: 'Database'
-  }
-});
-```
-
----
-
-## ⛓ Granular Control with `.with()`
-
-Override global rules on a per-log basis for ultimate flexibility.
-
-### 🔔 Force Send
-
-Send a log to Discord even if it normally wouldn't qualify:
-
-```javascript
-// Force this success log to be sent to Discord
-log.with({ discord: true }).success('Big payment received: $500.00');
-```
-
-**Use case:** You want to see a "Success" log in Discord, even though your transport is set to "Errors Only".
-
-### 🔇 Force Mute
-
-Prevent a log from being sent to Discord:
-
-```javascript
-// Prevent this error from spamming Discord
-log.with({ discord: false }).error('Client disconnected unexpectedly');
-```
-
-**Use case:** You have a recurring error that isn't important and want to prevent it from spamming your Discord channel.
-
----
-
-## 💾 File Logging
-
-**🏷️ Node.js Only**
-
-Automatically persist logs to the file system with zero configuration.
-
-```javascript
-// Logs will be appended to this file
+```ts
 log.file('./logs/application.log');
 ```
 
-### ✨ Smart Features
+File logging will automatically create directories and append JSON entries.
 
-- ✅ Automatic directory creation if the folder doesn't exist
-- ✅ Append mode (doesn't overwrite existing logs)
-- ✅ Thread-safe writes
-- ✅ Gracefully disabled in browser environments
+## Transports
 
----
+Transports allow custom output destinations.
 
-## 🛠 Advanced Usage
-
-### 🎨 Custom Log Levels
-
-Create your own log levels with custom colors and emojis:
-
-```javascript
-// 1. Register the level
-log.addLevel('audit', {
-  color: 'magenta',
-  emoji: '🛡️'
-});
-
-// 2. Use it
-// TypeScript users: Cast to any or extend the interface
-(log as any).audit('User changed password');
+```ts
+const transport = {
+  log(entry) {
+    console.log('Custom transport', entry);
+  }
+};
+log.addTransport(transport);
+log.removeTransport(transport);
+log.clearTransports();
 ```
 
-### ⏱️ Performance Timers
+## DiscordTransport
 
-Measure how long code takes to execute:
+```ts
+import { DiscordTransport } from '@anishsharma/betterlogs';
 
-```javascript
-log.time('db-query');
-
-// ... perform heavy operation ...
-
-log.timeEnd('db-query');
-// Output: [INFO] Timer 'db-query': 142ms
-```
-
-### 📊 Table View
-
-Pretty-print arrays or objects:
-
-```javascript
-const users = [
-  { id: 1, name: 'Alice', role: 'Admin' },
-  { id: 2, name: 'Bob', role: 'User' }
-];
-
-log.table(users);
-```
-
-**Output:**
-
-```
-┌─────────┬────┬─────────┬─────────┐
-│ (index) │ id │  name   │  role   │
-├─────────┼────┼─────────┼─────────┤
-│    0    │ 1  │ 'Alice' │ 'Admin' │
-│    1    │ 2  │ 'Bob'   │ 'User'  │
-└─────────┴────┴─────────┴─────────┘
-```
-
----
-
-## 🌐 Browser Support
-
-**🏷️ Universal - Works Everywhere**
-
-BetterLogs automatically detects its environment and adapts accordingly.
-
-### 🎨 Browser Features
-
-| Feature                   | Status       | Description                                          |
-| ------------------------- | ------------ | ---------------------------------------------------- |
-| 🎨 **CSS Styling**        | ✅ Supported | Uses browser-native CSS for beautiful console output |
-| 🔌 **Discord Transports** | ✅ Supported | Still works via browser fetch API                    |
-| 💾 **File Logging**       | ⚠️ Disabled  | Safely disabled (no errors thrown)                   |
-| 🎯 **All Log Levels**     | ✅ Supported | Full feature parity with Node.js                     |
-
-### 📦 Browser Usage
-
-```html
-<script type="module">
-  import log from 'https://esm.sh/@anishsharma/betterlogs';
-
-  log.success('Hello from the Browser!');
-  log.info('BetterLogs works seamlessly in browsers');
-
-  // Discord integration still works!
-  const discord = new DiscordTransport({
-    webhookUrl: 'https://discord.com/api/webhooks/...'
-  });
-  log.addTransport(discord);
-</script>
-```
-
----
-
-## 📖 Complete Example
-
-Here's a comprehensive example showing multiple features together:
-
-```javascript
-import log, { DiscordTransport } from '@anishsharma/betterlogs';
-
-// Configure the logger
-log.config({
-  theme: 'neon',
-  level: 'info',
-  showTimestamp: true
-});
-
-// Set up Discord alerts for critical issues
 const discord = new DiscordTransport({
-  webhookUrl: 'https://discord.com/api/webhooks/...',
+  webhookUrl: 'https://discord.com/api/webhooks/your-webhook-url',
   filter: {
-    minLevel: 'error',
-    onlyLabels: ['Payment', 'Auth']
+    minLevel: 'warn',
+    includeLevels: ['critical'],
+    onlyLabels: ['Auth', 'Payment'],
+    contains: 'Database'
   }
 });
+
 log.addTransport(discord);
-
-// Enable file logging
-log.file('./logs/app.log');
-
-// Create labeled loggers for different modules
-const paymentLog = log.label('Payment');
-const authLog = log.label('Auth');
-
-// Use them in your application
-authLog.info('User login attempt');
-authLog.success('User authenticated successfully');
-
-paymentLog.info('Processing payment...');
-log.time('payment-processing');
-
-// ... payment logic ...
-
-log.timeEnd('payment-processing');
-
-// Force send important success to Discord
-paymentLog.with({ discord: true }).success('Payment of $1,234.56 processed');
-
-// Suppress noisy errors from Discord
-paymentLog.with({ discord: false }).error('Payment validation failed: invalid card number');
 ```
 
----
+### DiscordTransport options
 
-## 🤝 Contributing
+- `webhookUrl`: required Discord webhook URL
+- `filter.minLevel`: minimum level to send
+- `filter.includeLevels`: always send these levels
+- `filter.onlyLabels`: send only from listed labels
+- `filter.contains`: send only if the message contains text
+- `customCheck`: optional callback to decide per entry
 
-Found a bug or have a feature request? We'd love to hear from you!
+## Creating separate logger instances
 
-- 🐛 [Report Issues](https://github.com/anishdevtech/betterlogs/issues)
-- 💡 [Request Features](https://github.com/anishdevtech/betterlogs/issues)
+```ts
+const customLogger = log.create({ level: 'debug' });
+customLogger.debug('Independent logger');
+```
 
----
+## Example sequence
 
-## 📄 License
+```ts
+import log, { DiscordTransport } from '@anishsharma/betterlogs';
 
-MIT License © 2025-26 BetterLogs
+log.config({ theme: 'neon', level: 'info' });
+const discord = new DiscordTransport({
+  webhookUrl: 'https://discord.com/api/webhooks/YOUR_WEBHOOK_URL',
+  filter: { minLevel: 'warn' }
+});
+log.addTransport(discord);
+log.setTheme('dark');
 
----
+log.info('App is ready');
+log.addLevel('audit', { color: 'magenta', emoji: '🛡️' });
+(log as any).audit('Audit completed');
+log.time('startup');
 
-<div align="center">
+// later...
+log.timeEnd('startup');
+```
 
-**Made with 💜 by Anish**
+## Example files
 
-[GitHub](https://github.com/anishdevtech/betterlogs) • [NPM](https://www.npmjs.com/package/@anishsharma/betterlogs)
-
-</div>
+See `/examples/basic-usage.ts`, `/examples/advance.ts`, and `/examples/all-features.ts` for runnable usage patterns.
