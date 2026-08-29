@@ -1,68 +1,44 @@
-# BetterLogs AI Chatbot Summary
+# BetterLogs AI Assistant Reference
 
-Use the following prompt when asking an AI assistant to understand the BetterLogs package:
+When instructing an AI assistant to use BetterLogs in a codebase, provide this reference:
 
 ```txt
-You are reviewing the BetterLogs TypeScript package. It exports a default logger and several helper classes.
+You are working with @anishsharma/betterlogs, a zero-dependency TypeScript logging library for Node.js and browsers.
 
-Package name: betterlogs
-Language: TypeScript
+Package: @anishsharma/betterlogs
+Installation: npm install @anishsharma/betterlogs
 
 Main exports:
-- default logger object: `log`
-- `BetterLogger`
-- `ConfigManager`
-- `ThemeManager`
-- `DiscordTransport`
+- Default export: log (and betterlogs)
+- Classes: BetterLogger, ConfigManager, ThemeManager, FileLogger, RotatingFileLogger, Redactor, BoxDrawer
+- Transports: DiscordTransport, SlackTransport, TelegramTransport, HttpTransport, CallbackTransport
+- Middleware: createHttpMiddleware
 
-Key logger methods:
-- `log.info(message)`
-- `log.success(message)`
-- `log.warn(message)`
-- `log.error(message)`
-- `log.debug(message)`
-- `log.log(level, message)`
-- `log.silent(message)`
-- `log.withLabel(name)`
-- `log.with(options)`
-- `log.config(config)`
-- `log.setLevel(level)`
-- `log.setMode(mode)`
-- `log.setTheme(theme)`
-- `log.toggleEmoji(flag)`
-- `log.setTimestampFormat(format)`
-- `log.time(label)`
-- `log.timeLog(label)`
-- `log.timeEnd(label)`
-- `log.clearTimers()`
-- `log.table(data)`
-- `log.file(path)`
-- `log.addTransport(transport)`
-- `log.removeTransport(transport)`
-- `log.clearTransports()`
-- `log.addTheme(theme)`
-- `log.listThemes()`
-- `log.deregisterTheme(name)`
-- `log.addLevel(name, config)`
-- `log.create(config)`
+Key Methods:
+- log.info(msg, ...data), log.warn(msg, ...data), log.error(err, ...data), log.debug(msg, ...data), log.trace(msg, ...data)
+- log.ready(msg, ...data), log.start(msg, ...data), log.success(msg, ...data), log.pause(msg, ...data), log.fatal(err, ...data)
+- log.child({ label, meta, level }) -> Creates an isolated child logger
+- log.with(meta) -> Attaches scoped metadata or transport overrides (e.g. { discord: true })
+- log.box(text, options) -> Renders styled Unicode border boxes
+- log.runWithContext(ctx, fn) -> Traces request context via Node.js AsyncLocalStorage
+- log.httpMiddleware(options) -> Color-coded request logging for Express/Node HTTP servers
+- log.patchConsole() / log.unpatchConsole() -> Upgrades existing global console.log calls
+- log.throttle({ limit, windowMs }) -> Rate limits repetitive logs
+- log.sample(rate) -> Probabilistic log sampling for high-frequency loops
+- log.config(options) -> Configures themes (dracula, nord, catppuccin, neon, dark, light, minimal), mode (pretty / json), secret redaction, and log rotation
+- log.file(path, rotationOptions) -> Zero-dependency file logging with size/date rotation
+- log.addTransport(transport) -> Direct alerting to Discord, Slack, Telegram, or HTTP endpoints
+- log.close() -> Flushes and closes file handles and transports
 
-Important package behavior:
-- Supports built-in themes (`dark`, `light`, `neon`, `minimal`) and custom theme registration.
-- Supports custom log levels with colors and emojis.
-- Supports Node.js file logging.
-- Supports Discord webhook transports with filter options and custom checks.
-- Uses pretty formatting by default and JSON mode when configured.
-- Supports label-based grouping and per-log metadata via `with()`.
+Code Patterns:
 
-Explain how developers can use BetterLogs in both Node.js and browser environments, including:
-- installation
-- importing the package
-- configuring themes and formatting
-- creating labels and groups
-- adding custom log levels
-- using transports and Discord integration
-- timer helpers and table output
-- creating separate logger instances
+1. Express Server:
+app.use(log.httpMiddleware());
+app.listen(3000, () => log.ready('Server listening on http://localhost:3000'));
 
-Also list the most important files in the package and how the default export is created.
+2. Secret Redaction:
+log.config({ redaction: { paths: ['password', 'token', 'authorization', '*.secret'] } });
+
+3. Upgrade Legacy Projects:
+log.patchConsole();
 ```

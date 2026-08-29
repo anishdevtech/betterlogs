@@ -1,11 +1,11 @@
-import log, { DiscordTransport, Theme } from '../src';
+import log, { DiscordTransport, HttpTransport, CallbackTransport, Theme } from '../src';
 
 // 1. Install and import
-//    import log, { DiscordTransport, Theme } from '@anishsharma/betterlogs';
+//    import log, { DiscordTransport, HttpTransport, Theme } from '@anishsharma/betterlogs';
 
 // 2. Configure the default logger
 log.config({
-  theme: 'dark',
+  theme: 'dracula',
   level: 'debug',
   showTimestamp: true,
   showEmoji: true,
@@ -17,8 +17,8 @@ log.config({
 log.info('Application started');
 log.success('Setup completed');
 log.warn('Cache limit approaching');
-log.error('Failed to load module');
-log.debug('Debug payload ready');
+log.error(new Error('Failed to load database driver'));
+log.debug('Debug payload ready', { host: 'localhost', port: 5432 });
 
 // 4. Generic and silent logs
 log.log('info', 'Generic info via log()');
@@ -51,34 +51,54 @@ log.addTheme({
 log.addLevel('audit', { color: 'magenta', emoji: '🛡️' });
 (log as any).audit('Audit event created');
 
-// 6. Labels and groups
-const userLogger = log.label('User');
+// 6. Child Loggers & Scoped Context
+const userLogger = log.child({ label: 'User', meta: { service: 'user-service' } });
 userLogger.info('New user registered');
+
 const apiLogger = log.label('API');
 apiLogger.debug('Endpoint hit');
 
-// 7. Transport examples
-const exampleTransport = {
-  log(entry: any) {
-    console.log('Custom transport received:', entry.level, entry.message);
+// 7. Transports (Discord, HTTP, Custom Callbacks)
+const callbackTransport = new CallbackTransport((entry) => {
+  if (entry.level === 'error') {
+    // Custom in-memory telemetry, Sentry, or alert dispatcher
   }
-};
+});
 
-log.addTransport(exampleTransport);
-log.removeTransport(exampleTransport);
+const discord = new DiscordTransport({
+  webhookUrl: process.env.DISCORD_WEBHOOK_URL || 'https://discord.com/api/webhooks/example',
+  username: 'Production Logger',
+  filter: {
+    minLevel: 'error'
+  }
+});
+
+const httpTransport = new HttpTransport({
+  url: 'https://logs.example.com/ingest',
+  headers: { 'X-API-Key': 'secret' },
+  filter: { minLevel: 'warn' }
+});
+
+log.addTransport(callbackTransport);
+log.addTransport(discord);
+log.addTransport(httpTransport);
+log.removeTransport(callbackTransport);
 log.clearTransports();
 
-// 8. Per-log metadata
-log.with({ discord: true }).warn('This warning can be forced to Discord');
-log.with({ discord: false }).error('This error stays local');
+// 8. Per-log structured metadata
+log
+  .with({ discord: true, transactionId: 'tx_789' })
+  .warn('This warning is sent to Discord with metadata');
+log.with({ discord: false }).error('This error stays local only');
 
-// 9. Timer helpers
+// 9. Timer helpers (return elapsed milliseconds)
 log.time('startup');
 setTimeout(() => {
-  log.timeLog('startup');
-  log.timeEnd('startup');
+  const elapsedLog = log.timeLog('startup');
+  const elapsedEnd = log.timeEnd('startup');
+  console.log(`Timer reported: ${elapsedLog}ms (log), ${elapsedEnd}ms (end)`);
   log.clearTimers();
-}, 500);
+}, 300);
 
 // 10. Table output
 log.table([
@@ -89,15 +109,6 @@ log.table([
 // 11. File logging (Node.js only)
 log.file('./logs/full-example.log');
 
-// 12. Discord transport setup
-const discord = new DiscordTransport({
-  webhookUrl: 'https://discord.com/api/webhooks/YOUR_WEBHOOK_URL',
-  filter: {
-    minLevel: 'error'
-  }
-});
-log.addTransport(discord);
-
-// 13. Independent logger instance
-const separateLogger = log.create({ level: 'debug' });
+// 12. Independent logger instances
+const separateLogger = log.create({ level: 'debug', theme: 'catppuccin' });
 separateLogger.info('Separate logger instance starting');

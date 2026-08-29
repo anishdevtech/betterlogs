@@ -12,7 +12,9 @@ describe('BetterLogger', () => {
   // Spies
   const consoleSpy = {
     log: vi.spyOn(console, 'log').mockImplementation(() => {}),
-    error: vi.spyOn(console, 'error').mockImplementation(() => {})
+    error: vi.spyOn(console, 'error').mockImplementation(() => {}),
+    warn: vi.spyOn(console, 'warn').mockImplementation(() => {}),
+    debug: vi.spyOn(console, 'debug').mockImplementation(() => {})
   };
 
   beforeEach(() => {
@@ -29,13 +31,36 @@ describe('BetterLogger', () => {
     expect(output).toContain('Info message');
   });
 
-  it('should create labelled loggers', () => {
+  it('should create labelled loggers with withLabel and group', () => {
     const labeled = logger.withLabel('API');
     labeled.info('Request received');
 
     expect(consoleSpy.log).toHaveBeenCalled();
     const output = consoleSpy.log.mock.calls[0][0];
     expect(output).toContain('[API]');
+
+    const grouped = logger.group('Auth');
+    grouped.info('User authenticated');
+    expect(consoleSpy.log.mock.calls[1][0]).toContain('[Auth]');
+  });
+
+  it('should create child loggers with child()', () => {
+    const mockTransport = { log: vi.fn() };
+    logger.addTransport(mockTransport);
+
+    const childLogger = logger.child({
+      label: 'Worker',
+      meta: { workerId: 'w-1' },
+      level: 'debug'
+    });
+
+    childLogger.debug('Processing task');
+    expect(mockTransport.log).toHaveBeenCalled();
+
+    const entry = mockTransport.log.mock.calls[0][0] as LogEntry;
+    expect(entry.label).toBe('Worker');
+    expect(entry.meta).toEqual({ workerId: 'w-1' });
+    expect(entry.level).toBe('debug');
   });
 
   it('should support dynamic custom levels', () => {
@@ -50,12 +75,28 @@ describe('BetterLogger', () => {
     expect(output).toContain('🛡️');
   });
 
-  it('should support timer functions', () => {
+  it('should support Error objects directly in logger.error()', () => {
+    const mockTransport = { log: vi.fn() };
+    logger.addTransport(mockTransport);
+
+    const testError = new Error('Database disconnected');
+    logger.error(testError);
+
+    expect(consoleSpy.error).toHaveBeenCalled();
+    expect(mockTransport.log).toHaveBeenCalled();
+
+    const entry = mockTransport.log.mock.calls[0][0] as LogEntry;
+    expect(entry.message).toBe('Database disconnected');
+    expect(entry.error).toBe(testError);
+  });
+
+  it('should support timer functions and return durations', () => {
     vi.useFakeTimers();
     logger.time('db');
     vi.advanceTimersByTime(100);
-    logger.timeEnd('db');
+    const duration = logger.timeEnd('db');
 
+    expect(duration).toBe(100);
     expect(consoleSpy.log).toHaveBeenCalled();
     const output = consoleSpy.log.mock.calls[0][0];
     expect(output).toContain("Timer 'db': 100ms");
@@ -105,11 +146,13 @@ describe('BetterLogger', () => {
     vi.useFakeTimers();
     logger.time('cache');
     vi.advanceTimersByTime(120);
-    logger.timeLog('cache');
+    const duration = logger.timeLog('cache');
+    expect(duration).toBe(120);
     expect(consoleSpy.log).toHaveBeenCalled();
 
     logger.clearTimers();
-    logger.timeLog('cache');
+    const nonExistent = logger.timeLog('cache');
+    expect(nonExistent).toBeUndefined();
     expect(consoleSpy.log.mock.calls[1][0]).toContain("Timer 'cache' has not been started");
     vi.useRealTimers();
   });
@@ -139,11 +182,11 @@ describe('BetterLogger', () => {
     const mockTransport = { log: vi.fn() };
     logger.addTransport(mockTransport);
 
-    logger.with({ discord: true }).info('Chained');
+    logger.with({ discord: true, reqId: '123' }).info('Chained');
 
     expect(mockTransport.log).toHaveBeenCalled();
     const entry = mockTransport.log.mock.calls[0][0] as LogEntry;
-    expect(entry.meta).toEqual({ discord: true });
+    expect(entry.meta).toEqual({ discord: true, reqId: '123' });
   });
 
   it('should propagate logs to transports', async () => {
@@ -158,14 +201,11 @@ describe('BetterLogger', () => {
     expect(entry.message).toBe('Critical failure');
   });
 
-  it('should pass options through "with()" chaining', () => {
-    const mockTransport = { log: vi.fn() };
+  it('should close resources via close()', async () => {
+    const mockTransport = { log: vi.fn(), close: vi.fn() };
     logger.addTransport(mockTransport);
 
-    logger.with({ discord: true }).info('Chained');
-
-    expect(mockTransport.log).toHaveBeenCalled();
-    const entry = mockTransport.log.mock.calls[0][0] as LogEntry;
-    expect(entry.meta).toEqual({ discord: true });
+    await logger.close();
+    expect(mockTransport.close).toHaveBeenCalled();
   });
 });

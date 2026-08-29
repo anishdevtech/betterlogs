@@ -1,4 +1,4 @@
-import { betterlogs, Theme, DiscordTransport } from '../src';
+import { betterlogs, Theme, DiscordTransport, HttpTransport } from '../src';
 
 const customTheme: Theme = {
   name: 'sunset',
@@ -11,7 +11,7 @@ const customTheme: Theme = {
   }
 };
 
-// Register and apply a custom theme
+// 1. Register and apply a custom theme
 betterlogs.addTheme(customTheme);
 betterlogs.setTheme('sunset');
 betterlogs.toggleEmoji(true);
@@ -19,24 +19,25 @@ betterlogs.setTimestampFormat('12h');
 betterlogs.setMode('json');
 betterlogs.setLevel('debug');
 
-// Custom levels
+// 2. Custom levels
 betterlogs.addLevel('critical', { color: 'red', emoji: '🔥' });
 (betterlogs as any).critical('Critical threshold reached');
 
-// Labels and grouped logging
-const paymentLog = betterlogs.label('Payment');
+// 3. Child loggers and grouped logging
+const paymentLog = betterlogs.child({ label: 'Payment', meta: { currency: 'USD' } });
 paymentLog.success('Payment processed successfully');
 
 const securityLog = betterlogs.label('Security');
 securityLog.warn('Suspicious login attempt');
 
-// Per-message metadata
-betterlogs.with({ discord: true }).success('Important event sent to Discord');
-betterlogs.with({ discord: false }).error('Local error only');
+// 4. Per-message metadata & error objects
+betterlogs.with({ discord: true, alert: 'high' }).success('Important event sent to Discord');
+betterlogs.with({ discord: false }).error(new Error('Local error only, muted from Discord'));
 
-// Discord transport example
+// 5. Discord transport example
 const discord = new DiscordTransport({
-  webhookUrl: 'https://discord.com/api/webhooks/YOUR_WEBHOOK_URL',
+  webhookUrl: process.env.DISCORD_WEBHOOK_URL || 'https://discord.com/api/webhooks/example',
+  username: 'BetterLogs Notifier',
   filter: {
     minLevel: 'warn',
     includeLevels: ['critical'],
@@ -45,14 +46,23 @@ const discord = new DiscordTransport({
   }
 });
 
+// 6. Generic HTTP webhook transport
+const httpEndpoint = new HttpTransport({
+  url: 'https://httpbin.org/post',
+  headers: { 'X-Custom-Header': 'betterlogs' },
+  filter: { minLevel: 'error' }
+});
+
 betterlogs.addTransport(discord);
+betterlogs.addTransport(httpEndpoint);
+
 betterlogs.removeTransport(discord);
 betterlogs.clearTransports();
 
-// Theme helpers
+// 7. Theme helpers
 console.log('Registered themes:', betterlogs.listThemes());
 betterlogs.deregisterTheme('sunset');
 
-// Create an independent logger instance
-const customLogger = betterlogs.create({ level: 'debug' });
+// 8. Create an independent logger instance
+const customLogger = betterlogs.create({ level: 'debug', theme: 'nord' });
 customLogger.debug('A new logger instance is ready');

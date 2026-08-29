@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { Formatter } from '../src/formatter';
 import { builtInThemes } from '../src/themes';
 import { LogEntry, BetterLogsConfig } from '../src/types';
-import { formatTime } from '../src/utils'; // Import the actual utility
+import { formatTime } from '../src/utils';
 
 describe('Formatter', () => {
   const testDate = new Date('2023-01-01T10:00:00Z');
@@ -11,7 +11,9 @@ describe('Formatter', () => {
     level: 'info',
     message: 'Test message',
     timestamp: testDate,
-    label: 'Auth'
+    label: 'Auth',
+    meta: { requestId: 'req_123' },
+    data: [{ count: 5 }]
   };
 
   const mockConfig: BetterLogsConfig = {
@@ -26,23 +28,43 @@ describe('Formatter', () => {
   it('should format pretty log string', () => {
     const result = Formatter.formatPretty(mockEntry, mockConfig, builtInThemes.dark);
 
-    // Dynamic Expectation: Ask the util what this time looks like locally
     const expectedTime = formatTime(testDate, '24h');
-
     expect(result).toContain(`[${expectedTime}]`);
     expect(result).toContain('Test message');
     expect(result).toContain('💡');
     expect(result).toContain('[Auth]');
   });
 
-  it('should format JSON string', () => {
-    const result = Formatter.formatJson(mockEntry);
+  it('should format pretty log with error stack trace', () => {
+    const errorEntry: LogEntry = {
+      level: 'error',
+      message: 'Failed to connect',
+      timestamp: testDate,
+      error: new Error('Socket closed')
+    };
+
+    const result = Formatter.formatPretty(errorEntry, mockConfig, builtInThemes.dark);
+    expect(result).toContain('Failed to connect');
+    expect(result).toContain('Socket closed');
+  });
+
+  it('should format JSON string with meta, data, and error', () => {
+    const errorEntry: LogEntry = {
+      ...mockEntry,
+      error: new Error('Socket timeout')
+    };
+
+    const result = Formatter.formatJson(errorEntry);
     const parsed = JSON.parse(result);
 
     expect(parsed.level).toBe('info');
     expect(parsed.message).toBe('Test message');
     expect(parsed.label).toBe('Auth');
     expect(parsed.timestamp).toBe(mockEntry.timestamp.toISOString());
+    expect(parsed.meta).toEqual({ requestId: 'req_123' });
+    expect(parsed.data).toEqual([{ count: 5 }]);
+    expect(parsed.error).toBeDefined();
+    expect(parsed.error.message).toBe('Socket timeout');
   });
 
   it('should respect config options in pretty mode', () => {
@@ -53,5 +75,17 @@ describe('Formatter', () => {
     expect(result).not.toContain(`[${expectedTime}]`);
     expect(result).not.toContain('💡');
     expect(result).toContain('Test message');
+  });
+
+  it('should switch formatter based on mode', () => {
+    const prettyResult = Formatter.format(mockEntry, mockConfig, builtInThemes.dark);
+    const jsonResult = Formatter.format(
+      mockEntry,
+      { ...mockConfig, mode: 'json' },
+      builtInThemes.dark
+    );
+
+    expect(prettyResult).toContain('Test message');
+    expect(() => JSON.parse(jsonResult)).not.toThrow();
   });
 });

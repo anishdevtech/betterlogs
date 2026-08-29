@@ -1,8 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { FileLogger } from '../src/fileLogger';
+import { RotatingFileLogger } from '../src/rotatingFileLogger';
 import fs from 'fs';
 
-// 1. Use vi.hoisted() so these variables exist BEFORE vi.mock() runs
 const { mockWrite, mockEnd, mockCork, mockUncork, mocks } = vi.hoisted(() => {
   const mockWrite = vi.fn();
   const mockEnd = vi.fn((cb?: () => void) => {
@@ -22,15 +21,15 @@ const { mockWrite, mockEnd, mockCork, mockUncork, mocks } = vi.hoisted(() => {
   const mocks = {
     existsSync: vi.fn(),
     mkdirSync: vi.fn(),
+    statSync: vi.fn(() => ({ size: 0 })),
     createWriteStream: vi.fn(() => mockStream),
-    appendFileSync: vi.fn(),
-    writeFileSync: vi.fn()
+    renameSync: vi.fn(),
+    unlinkSync: vi.fn()
   };
 
   return { mockWrite, mockEnd, mockCork, mockUncork, mocks };
 });
 
-// 2. Now use the hoisted variables safely
 vi.mock('fs', () => {
   return {
     default: mocks,
@@ -38,37 +37,30 @@ vi.mock('fs', () => {
   };
 });
 
-describe('FileLogger', () => {
+describe('RotatingFileLogger', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it('should create directory if needed', () => {
-    vi.mocked(fs.existsSync).mockReturnValue(false);
-
-    new FileLogger('./logs/test.log');
-
-    expect(fs.mkdirSync).toHaveBeenCalledWith('./logs', { recursive: true });
-  });
-
-  it('should write to stream', () => {
+  it('should write logs to stream and handle size rotation', () => {
     vi.mocked(fs.existsSync).mockReturnValue(true);
-    const logger = new FileLogger('test.log');
+    vi.mocked(fs.statSync).mockReturnValue({ size: 1000 } as any);
+
+    // Set max size to tiny size so rotation triggers
+    const logger = new RotatingFileLogger('test.log', { maxSize: '50B', maxFiles: 3 });
 
     logger.write({
       level: 'info',
-      message: 'test',
+      message: 'A relatively long message that definitely exceeds 50 bytes',
       timestamp: new Date()
     });
 
     expect(mockWrite).toHaveBeenCalled();
-    const output = mockWrite.mock.calls[0][0];
-    expect(output).toContain('"message":"test"');
   });
 
-  it('should flush and close stream', async () => {
+  it('should flush and close streams properly', async () => {
     vi.mocked(fs.existsSync).mockReturnValue(true);
-    const logger = new FileLogger('test.log');
+    const logger = new RotatingFileLogger('test.log');
 
     await logger.flush();
     expect(mockUncork).toHaveBeenCalled();

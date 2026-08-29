@@ -1,5 +1,6 @@
-import { BetterLogsConfig, LogLevel } from './types';
+import { BetterLogsConfig, LogLevel, Theme } from './types';
 import { ThemeManager } from './themes';
+import { LEVEL_WEIGHTS } from './utils';
 
 export const defaultConfig: BetterLogsConfig = {
   showTimestamp: true,
@@ -14,9 +15,12 @@ export class ConfigManager {
   private config: BetterLogsConfig;
   private themeManager: ThemeManager;
 
-  constructor(themeManager: ThemeManager) {
+  constructor(themeManager: ThemeManager, initialConfig?: Partial<BetterLogsConfig>) {
     this.themeManager = themeManager;
-    this.config = { ...defaultConfig };
+    this.config = {
+      ...defaultConfig,
+      ...initialConfig
+    };
   }
 
   updateConfig(newConfig: Partial<BetterLogsConfig>): void {
@@ -30,7 +34,11 @@ export class ConfigManager {
     return { ...this.config };
   }
 
-  getCurrentTheme() {
+  resetConfig(): void {
+    this.config = { ...defaultConfig };
+  }
+
+  getCurrentTheme(): Theme {
     const theme = this.config.theme;
     if (typeof theme === 'string') {
       return this.themeManager.getTheme(theme) || this.themeManager.getDefaultTheme();
@@ -38,20 +46,14 @@ export class ConfigManager {
     return theme;
   }
 
-  shouldLog(level: LogLevel): boolean {
+  shouldLog(level: LogLevel | string): boolean {
     if (level === 'silent') {
       return false;
     }
 
-    const levelWeights = {
-      debug: 0,
-      info: 1,
-      success: 1,
-      warn: 2,
-      error: 3,
-      silent: 999
-    };
+    const targetWeight = LEVEL_WEIGHTS[level] ?? 1;
+    const currentMinWeight = LEVEL_WEIGHTS[this.config.level] ?? 1;
 
-    return levelWeights[level] >= levelWeights[this.config.level];
+    return targetWeight >= currentMinWeight;
   }
 }

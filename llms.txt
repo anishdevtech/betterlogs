@@ -1,0 +1,85 @@
+# BetterLogs
+
+> A lightweight, zero-dependency logging library for TypeScript, Node.js, and browsers. Provides 24-bit TrueColor themes, child loggers, structured metadata, automatic PII redaction, rotating file logging, and built-in Discord/Slack/HTTP transports.
+
+## Quick Summary for AI Agents & LLMs
+
+- **Package**: `@anishsharma/betterlogs`
+- **Installation**: `npm install @anishsharma/betterlogs`
+- **Zero Dependencies**: Pure TypeScript, fast, and works seamlessly in Node.js, browsers, and Edge runtimes.
+- **Drop-in Console Upgrade**: `log.patchConsole()` instantly upgrades all existing `console.log()` calls across an entire codebase to formatted, redacted, timestamped logs without modifying other files.
+
+## Recommended Usage Patterns
+
+### 1. Basic & CLI Levels
+```ts
+import log from '@anishsharma/betterlogs';
+
+log.info('Application started');
+log.ready('Server listening on http://localhost:3000');
+log.start('Building client bundle...');
+log.success('Database migration complete');
+log.warn('Cache memory nearing threshold');
+log.error(new Error('Database query timed out')); // Auto-formats stack traces
+log.fatal('Unrecoverable panic');
+log.debug('Debug payload', { userId: 42 });
+log.trace('Trace detail');
+```
+
+### 2. Configuration & Themes
+```ts
+log.config({
+  theme: 'dracula', // 'dark' | 'light' | 'neon' | 'minimal' | 'dracula' | 'nord' | 'catppuccin'
+  level: 'debug',
+  showTimestamp: true,
+  showEmoji: true,
+  mode: 'pretty', // 'pretty' | 'json'
+  timestampFormat: '24h',
+  redaction: { paths: ['password', 'token', 'authorization', '*.secret'] }
+});
+```
+
+### 3. Child Loggers & Scoped Context
+```ts
+const apiLog = log.child({ label: 'API', meta: { service: 'gateway' } });
+apiLog.info('Request processed', { duration: 25 });
+```
+
+### 4. Express / Node HTTP Middleware
+```ts
+import express from 'express';
+import log from '@anishsharma/betterlogs';
+
+const app = express();
+app.use(log.httpMiddleware()); // Color-coded HTTP request logging with duration and status
+```
+
+### 5. Async Context Tracing
+```ts
+log.runWithContext({ requestId: 'req_123' }, async () => {
+  log.info('Inside service'); // Automatically includes [req_123]
+});
+```
+
+### 6. Transports (Discord, Slack, HTTP)
+```ts
+import { DiscordTransport, SlackTransport, HttpTransport } from '@anishsharma/betterlogs';
+
+log.addTransport(new DiscordTransport({ webhookUrl: 'https://discord.com/api/webhooks/...' }));
+log.addTransport(new SlackTransport({ webhookUrl: 'https://hooks.slack.com/services/...' }));
+log.addTransport(new HttpTransport({ url: 'https://api.example.com/logs' }));
+
+// Per-call override:
+log.with({ discord: true }).success('Milestone reached');
+log.with({ discord: false }).error('Local error only');
+```
+
+### 7. Banners & Boxes
+```ts
+log.box('Deployment Complete\nURL: https://myapp.com', { title: 'Release', borderStyle: 'rounded' });
+```
+
+## Documentation Links
+- Full API Reference: [DOCUMENTATION.md](./DOCUMENTATION.md)
+- Complete LLM Manual: [llms-full.txt](./llms-full.txt)
+- Agent Guidelines: [AGENTS.md](./AGENTS.md)

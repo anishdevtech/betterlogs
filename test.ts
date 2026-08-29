@@ -1,10 +1,12 @@
-import log, { DiscordTransport } from './src/index.ts'; // Adjust path if needed
+import log, { DiscordTransport } from './src/index';
 
-// 1. Setup Discord Transport with your URL
+// 1. Setup Discord Transport (reads from env or uses mock)
+const webhookUrl =
+  process.env.DISCORD_WEBHOOK_URL ||
+  'https://discord.com/api/webhooks/1454737463171088579/mock-webhook-token';
+
 const discordLayer = new DiscordTransport({
-  // I've pasted your URL here for testing:
-  webhookUrl:
-    'https://discord.com/api/webhooks/1454737463171088579/SC8KF_ZIVlTDDH-g48Hd-eD8sKYfMRzG6HtqCKgjA4nPRfKRHUnZBN6YsJb5XjwgL6L3',
+  webhookUrl,
   filter: {
     minLevel: 'error', // Standard errors go to Discord
     includeLevels: ['critical'] // Our custom 'critical' level goes too
@@ -26,14 +28,16 @@ async function runTests() {
   log.error('2. Database connection failed!', { attempt: 3, host: '127.0.0.1' });
 
   // TEST C: Success with Override -> Should be SENT (Forced)
-  log.with({ discord: true }).success('3. Payment received! (Forced to Discord)');
+  log
+    .with({ discord: true, requestId: 'req_abc123' })
+    .success('3. Payment received! (Forced to Discord)');
 
   // TEST D: Error with Override -> Should be IGNORED (Muted)
   log.with({ discord: false }).error('4. User cancelled upload (Muted from Discord)');
 
   // TEST E: Custom Critical Level -> Should be SENT
-  // @ts-ignore - TypeScript dynamic method
-  log.critical('5. SYSTEM MELTDOWN! (Custom critical level)');
+  const dynamicLog = log as unknown as Record<string, (msg: string) => void>;
+  dynamicLog.critical('5. SYSTEM MELTDOWN! (Custom critical level)');
 
   console.log('--- Tests Finished ---');
 }
